@@ -120,6 +120,51 @@ You can then "register" arrays from the dataframe one by one:
 	f.register_array('arrayA', ['b', 'c'])
 	f.register_array('arrayB', ['a', 'b'])
 
+Finally calling ``close`` to save the data:
+
+.. code:: python
+
+	f.close()
+
+You can now retrieve the memmap object the usual way:
+
+.. code:: python
+
+	f.get_array('/arrayA')
+
+The power of parallel writing shines when you have many arrays to write at once, which would be the case if you have groups of arrays determined by ``groupby`` argument. Let's take another example of dataframe that has groups column:
+
+.. code:: python
+
+	import numpy as np
+	import pandas as pd
+
+	data = np.arange(10*3).reshape((10, 3))
+	pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
+
+	group_col = ['Aaa', 'Aaa', 'Aaa', 'Bbb', 'Bbb', 'Bbb', 'Ccc', 'Ccc', 'Ccc', 'Ccc']
+	pdf['groups'] = group_col
+
+	f = HMF.open_file('pandasExample', mode='w+')
+
+You can then specify ``groupby``:
+
+.. code:: python
+
+	f.from_pandas(pdf, groupby='groups')  # You can also specify "orderby" in order to sort the array by a particular column!
+	
+	f.register_array('arrayA', ['b', 'c'])
+	f.register_array('arrayB', ['a', 'b'])
+
+	f.close()
+
+Now, when you get the array, the groups have been automatically created, defined by the value of the groupby column:
+
+.. code:: python
+
+	f.get_array('/Aaa/arrayA')  # get arrayA for partition group "Aaa"
+	f.get_array('/Ccc/arrayB')  # get arrayB for partition group "Ccc"
+
 
 
 

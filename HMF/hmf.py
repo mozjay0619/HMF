@@ -199,13 +199,13 @@ class HMF(BaseHMF):
         Also put arrays into sharedctypes
         """
 
-        data_array = self.pdf[col_names].values
+        if(encoder):
+            data_array = encoder(self.pdf[col_names])
+
+        else:
+            data_array = self.pdf[col_names].values
+        
         data_array = np.ascontiguousarray(data_array)
-        
-        if encoder:
-            data_array = encoder(data_array)
-        
-        # sharedctype
             
         tmp = np.ctypeslib.as_ctypes(data_array)
         shared_data_array = sharedctypes.Array(tmp._type_, tmp, lock=False)
