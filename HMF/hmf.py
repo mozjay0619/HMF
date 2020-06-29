@@ -87,9 +87,6 @@ def is_hmf_directory(root_path):
 
     return(True, memmap_map)
 
-
-
-
 def get_all_array_dirpaths(m):
     
     visited_dirpath = []
@@ -156,8 +153,6 @@ class HMF(BaseHMF):
         need to numerify groupby col!"""
         
         self.pdf = pdf
-
-        
         
         if groupby and orderby:
             self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
@@ -207,7 +202,6 @@ class HMF(BaseHMF):
         
         if encoder:
             data_array = encoder(data_array)
-
         
         # sharedctype
             
@@ -230,9 +224,3 @@ class HMF(BaseHMF):
 
         save_obj(self.memmap_map, memmap_map_dirpath)
             
-
-
-
-
-
-
