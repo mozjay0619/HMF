@@ -65,8 +65,7 @@ You can retrieve both the groups as well as arrays using ``get_group`` and ``get
 
 .. code:: python
 	
-	array = np.arange(9)
-	f.get_array('/groupA/array1')  
+	memmap_obj = f.get_array('/groupA/array1')  
 
 The returned object is a numpy memmap object that was created earlier. Again, once you are done writing data, don't forget to invoke ``close``!
 
@@ -91,12 +90,39 @@ You can then retrieve the attributes using ``get_node_attr`` method:
 	
 	f.set_node_attr('/groupA', key='someAttribute')
 
-Thus, HMF allows user to write data that is self describing by enabling user to easily read and write accompanying information. 
+Thus, HMF allows user to write data that is self describing by enabling user to easily read and write accompanying information associated with each node. 
 
 Using with Pandas 
 -----------------
 
-Lastly, 
+Lastly, HMF has API to easily extract array memmap from Pandas dataframes. Also, this mode of writing will be executed in parallel, i.e. all writable arrays will be written in parallel. Let's look at an example, starting from beginning. 
+
+.. code:: python
+
+	import numpy as np
+	import pandas as pd
+
+	data = np.arange(10*3).reshape((10, 3))
+	pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
+
+	f = HMF.open_file('pandasExample', mode='w+')
+
+You first introduce the dataframe to HMF like so:
+
+.. code:: python
+
+	f.from_pandas(pdf)
+
+You can then "register" arrays from the dataframe one by one:
+
+.. code:: python
+
+	f.register_array('arrayA', ['b', 'c'])
+	f.register_array('arrayB', ['a', 'b'])
+
+
+
+
 
 
 

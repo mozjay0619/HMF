@@ -94,7 +94,15 @@ class WriterProcessManager():
         start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-        array_filepath = '/'.join(('', group_name, array_filename))
+        # array_filepath = '/'.join(('', group_name, array_filename))
+
+
+        if(len(self.hmf_obj.groups)==1):
+            array_filepath = '/'.join(('', array_filename))
+        else:
+            array_filepath = '/'.join(('', group_name, array_filename))
+
+
 
         try: 
             self.hmf_obj.get_array(array_filepath)
@@ -117,8 +125,15 @@ class WriterProcessManager():
         group_name = self.hmf_obj.groups[task[1]][0]
         start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
 
-        array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-        array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+        
+        if(len(self.hmf_obj.groups)==1):
+            array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+        else:
+            array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
+            array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+
+
+        
 
         subproc = WriterProcess(self.shared_write_result_dict, 
                                 self.shared_write_error_dict,
@@ -139,9 +154,15 @@ class WriterProcessManager():
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
-        array_filepath = '/'.join(('', group_name, array_filename))
+
+        if(len(self.hmf_obj.groups)==1):
+            array_filepath = '/'.join(('', array_filename))
+        else:
+            array_filepath = '/'.join(('', group_name, array_filename))
 
         self.hmf_obj.update_memmap_map_array(array_filepath, array)
+
+
     
     def start(self):
         

@@ -184,7 +184,8 @@ class BaseHMF():
             memmap_map_group_pos = self.retrieve_memmap_map_pos_group(group_dirpath)
         else:
             memmap_map_group_pos = self.memmap_map
-            
+
+
         # TODO: check if array_name is already in here
         
         memmap_map_group_pos['nodes'][array_name] = dict()
@@ -192,7 +193,15 @@ class BaseHMF():
         memmap_map_group_pos['nodes'][array_name]['attributes'] = dict()
         memmap_map_group_pos['nodes'][array_name]['nodes'] = dict()
 
-        filepath = self._assemble_dirpath(memmap_map_group_pos['dirpath'], array_name)
+        if(memmap_map_group_pos['node_type']!='root'):
+
+            filepath = self._assemble_dirpath(memmap_map_group_pos['dirpath'], array_name)
+
+        else:
+
+            filepath = array_name
+
+
         memmap_map_group_pos['nodes'][array_name]['dirpath'] = filepath
         
         dtype = str(array.dtype)
