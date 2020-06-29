@@ -44,12 +44,28 @@ This code will create a "directory" groupA, in which we can write arrays or furt
 
 .. code:: python
 
-	f.set_group('/group1/groupA/groupZ')  # the path must start with root "/"
+	f.set_group('/group1/groupA/groupZ')  
 
 We can write array using ``set_array`` method:
 
 .. code:: python
 	
 	array = np.arange(9)
-	f.set_array('/groupA/array1', array)  # the path must start with root "/"
+	f.set_array('/groupA/array1', array)  
+
+You need not create the group ahead of time. If groupA does not exist, the above code will create the groupA as well. Also, most importatly, the above code will create a memory-map to the array, which you can find out more about `here <https://numpy.org/doc/stable/reference/generated/numpy.memmap.html>`_
+
+You can retrieve both the groups as well as arrays using ``get_group`` and ``get_array`` methods. For example, the below code will retrieve the written array data:
+
+.. code:: python
+	
+	array = np.arange(9)
+	f.get_array('/groupA/array1')  
+
+The returned object is a numpy memmap object. 
+
+
+
+
+
 
