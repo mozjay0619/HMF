@@ -71,17 +71,7 @@ class BaseHMF():
         """
         
         self.update_memmap_map_group(group_dirpath)
-        
-        print(self.memmap_map)
 
-
-    def _is_group_node(self, memmap_map_pos, node_name):
-
-        return memmap_map_pos[node_name]['node_type'] == 'group'
-
-    def _is_array_node(self, memmap_map_pos, node_name):
-
-        return memmap_map_pos[node_name]['node_type'] == 'array'        
         
     def update_memmap_map_group(self, group_dirpath):
         
@@ -148,7 +138,9 @@ class BaseHMF():
                 
     def retrieve_memmap_map_pos_group(self, group_dirpath):
         """
-        group_pos: the dictionary where nodes, dirpath, node_type can be queried
+        group_pos: the dictionary position where nodes, dirpath, node_type can be queried
+        i.e. right below the node names dict level
+
 
         check if it is indeed a group
 
@@ -209,6 +201,7 @@ class BaseHMF():
         memmap_map_group_pos['nodes'][array_name] = dict()
         memmap_map_group_pos['nodes'][array_name]['node_type'] = 'array'
         memmap_map_group_pos['nodes'][array_name]['attributes'] = dict()
+        memmap_map_group_pos['nodes'][array_name]['nodes'] = dict()
 
         filepath = self._assemble_dirpath(memmap_map_group_pos['dirpath'], array_name)
         memmap_map_group_pos['nodes'][array_name]['dirpath'] = filepath
@@ -236,9 +229,6 @@ class BaseHMF():
             memmap_map_group_pos = self.memmap_map
             
         return memmap_map_group_pos['nodes'][array_name]
-        
-
-
 
     def write_array(self, array_filepath, array):
         
@@ -260,12 +250,13 @@ class BaseHMF():
 
         return '__'.join((source_path, dest_path))
 
+    def _is_group_node(self, memmap_map_pos, node_name):
 
-        
-    
+        return memmap_map_pos[node_name]['node_type'] == 'group'
 
+    def _is_array_node(self, memmap_map_pos, node_name):
 
-
+        return memmap_map_pos[node_name]['node_type'] == 'array'      
 
 
     
@@ -280,20 +271,28 @@ class BaseHMF():
             memmap_map_array_pos['dirpath'])
         
         return read_memmap(filepath, dtype, shape, idx)
-    
-    def set_attribute(self, dirpath):
-        pass
-    
-    def get_attribute(self, dirpath):
-        pass
+
+
+
 
     
-
-    def get_all_array_files(self):
-
-        pass
+    def set_node_attr(self, attr_dirpath, key, value):
 
 
+        self.update_memmap_map_group(attr_dirpath)
+            
+        memmap_map_group_pos = self.retrieve_memmap_map_pos_group(attr_dirpath)
+
+        memmap_map_group_pos['attributes'][key] = value
+
+
+    def get_node_attr(self, attr_dirpath, key):
+        
+        memmap_map_group_pos = self.retrieve_memmap_map_pos_group(attr_dirpath)
+
+        return memmap_map_group_pos['attributes'][key]
+
+    
     
 
 
