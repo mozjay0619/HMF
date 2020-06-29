@@ -29,8 +29,27 @@ In order to start working with the HMF, we must invoke ``open_file`` method, whi
 
 	f = HMF.open_file('myRoot', mode='w+')
 
-Currently, the supported modes are ``w+`` and ``r+``. ``w+`` opens a directory for read as well as write. It creates a new directory if it does not exist, and if it exists, it erases the contents of that directory. ``r+`` is for reading and writing, and will read the existing directory contents if it already exists.
+Currently, the supported modes are ``w+`` and ``r+``. ``w+`` opens a directory for write. It creates a new directory if it does not exist, and if it exists, it erases the contents of that directory. ``r+`` is for reading and writing, and will read the existing directory contents if it already exists.
 
+Writing groups and arrays
+-------------------------
 
+Here we will demonstrate self-organizing property of HMF. With a single file handler, the user can easily write data using syntax of hierarchical file system. This will be easier to understand if you are already familiar with HDF5. 
 
+.. code:: python
+
+	f.set_group('/groupA')  # the path must start with root "/"
+
+This code will create a "directory" groupA, in which we can write arrays or further groups. The user can create nested directory at once as well:
+
+.. code:: python
+
+	f.set_group('/group1/groupA/groupZ')  # the path must start with root "/"
+
+We can write array using ``set_array`` method:
+
+.. code:: python
+	
+	array = np.arange(9)
+	f.set_array('/groupA/array1', array)  # the path must start with root "/"
 
