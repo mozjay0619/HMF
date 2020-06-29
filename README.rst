@@ -34,13 +34,13 @@ Currently, the supported modes are ``w+`` and ``r+``. ``w+`` opens a directory f
 Writing groups and arrays
 -------------------------
 
-Here we will demonstrate self-organizing property of HMF. With a single file handler, the user can easily write data using syntax of hierarchical file system. This will be easier to understand if you are already familiar with HDF5. 
+Here we will demonstrate the self-organizing property of HMF. With a single "file" handler, the user can easily write data using hierarchical file system. This will be easier to understand if you are already familiar with HDF5. 
 
 .. code:: python
 
 	f.set_group('/groupA')  # the path must start with root "/"
 
-This code will create a "directory" groupA, in which we can write arrays or further groups. The user can create nested directory at once as well:
+This code will create a "directory", or "node", groupA, in which we can write arrays or further groups. The user can create nested directory at once as well:
 
 .. code:: python
 
@@ -62,7 +62,25 @@ You can retrieve both the groups as well as arrays using ``get_group`` and ``get
 	array = np.arange(9)
 	f.get_array('/groupA/array1')  
 
-The returned object is a numpy memmap object. 
+The returned object is a numpy memmap object that was created earlier. 
+
+Writing node attributes
+-----------------------
+
+Here we will demonstrate the self-documenting property of HMF. This again should be no suprise for those familiar with HDF5. HMF allows user to give attribute to each node, whether that is a group node or an array node. Let's try to give some attributes to the groupA node from above. 
+
+.. code:: python
+	
+	f.set_node_attr('/groupA', key='someAttribute', value='attributeValue')  
+
+Both the key and value of the attribute can be arbitrary Python object. 
+
+You can then retrieve the attributes using ``get_node_attr`` method:
+
+.. code:: python
+	
+	f.set_node_attr('/groupA', key='someAttribute')
+
 
 
 
