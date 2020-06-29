@@ -18,5 +18,5 @@ setup(
 	url="https://github.com/mozjay0619/HMF",
 	license="DSB 3-clause",
 	packages=find_packages(),
-	install_requires=["numpy>=1.18.2", "pandas>=0.25.3"]
+	install_requires=["numpy>=1.18.2", "pandas>=0.25.3", "psutil>=5.7.0"]
 	)
