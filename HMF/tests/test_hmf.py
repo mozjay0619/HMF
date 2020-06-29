@@ -17,6 +17,24 @@ def test_writing_arrays():
 	f.set_array('/group2/subgroup1/array2', np.arange(3))
 	f.close()
 
+def test_from_pandas_API():
+	"""test writing using from_pandas API and also reading"""
 
+	data = np.arange(10*3).reshape((10, 3))
+	groups = ['a'] * 3 + ['b'] * 3 + ['c'] * 4
+	pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
+	pdf['group'] = groups
+
+	f = HMF.open_file('asdf', mode='w+', verbose=False)
+	f.from_pandas(pdf, groupby='group', orderby='c')
+	f.register_array('arrayA', ['b', 'c'])
+	f.register_array('arrayB', ['a', 'b'])
+	f.close()
+
+	f = HMF.open_file('asdf', mode='r+')
+	a_arrayA = f.get_array('/a/arrayA')
+	b_arrayB = f.get_array('/b/arrayB')
+
+	assert check_equal(pdf[pdf['group']=='b'][['a', 'b']].values, b_arrayB)
 
 

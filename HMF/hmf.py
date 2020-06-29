@@ -9,7 +9,9 @@ import numpy as np
 import pandas as pd
 import os
 import shutil
+import psutil
 from multiprocessing import sharedctypes
+
 
 GROUPBY_ENCODER = "__HMF__groupByNumericEncoder"
 MEMMAP_MAP_FILENAME = "__HMF__memmapMapName"
@@ -210,14 +212,17 @@ class HMF(BaseHMF):
         
         self.arrays.append((array_filename, shared_data_array))
         
-    def close(self):
+    def close(self, zip_file=False, num_subprocs='auto'):
 
         if(len(self.arrays) > 0):
 
-            if(self.verbose):
-                print('Saving registered arrays using multiprocessing\n')
+            if(num_subprocs=='auto'):
+                num_subprocs = psutil.cpu_count(logical=False)
 
-            WPM = WriterProcessManager(self, verbose=self.verbose)
+            if(self.verbose):
+                print('Saving registered arrays using multiprocessing [ {} ] subprocs\n'.format(num_subprocs))
+
+            WPM = WriterProcessManager(self, num_subprocs=num_subprocs, verbose=self.verbose)
             WPM.start()
 
         memmap_map_dirpath = os.path.join(self.root_dirpath, MEMMAP_MAP_FILENAME)
