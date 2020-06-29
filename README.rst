@@ -31,6 +31,12 @@ In order to start working with the HMF, we must invoke ``open_file`` method, whi
 
 Currently, the supported modes are ``w+`` and ``r+``. ``w+`` opens a directory for write. It creates a new directory if it does not exist, and if it exists, it erases the contents of that directory. ``r+`` is for reading and writing, and will read the existing directory contents if it already exists.
 
+Once you are done writing data (reading and writing process is described below), it is *very* important that you invoke ``close`` method to save all the data on disk:
+
+.. code:: python
+
+	f.close()
+
 Writing groups and arrays
 -------------------------
 
@@ -62,7 +68,11 @@ You can retrieve both the groups as well as arrays using ``get_group`` and ``get
 	array = np.arange(9)
 	f.get_array('/groupA/array1')  
 
-The returned object is a numpy memmap object that was created earlier. 
+The returned object is a numpy memmap object that was created earlier. Again, once you are done writing data, don't forget to invoke ``close``!
+
+.. code:: python
+	
+	f.close() 
 
 Writing node attributes
 -----------------------
@@ -80,6 +90,15 @@ You can then retrieve the attributes using ``get_node_attr`` method:
 .. code:: python
 	
 	f.set_node_attr('/groupA', key='someAttribute')
+
+Thus, HMF allows user to write data that is self describing by enabling user to easily read and write accompanying information. 
+
+Using with Pandas 
+-----------------
+
+Lastly, 
+
+
 
 
 
