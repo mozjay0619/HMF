@@ -1,6 +1,6 @@
 
 
-__version__ = "0.0.b8"
+__version__ = "0.0.b9"
 
 from .core import BaseHMF
 from .parallel import WriterProcessManager
