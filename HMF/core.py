@@ -238,18 +238,6 @@ class BaseHMF():
         
         write_memmap(filepath, dtype, shape, array)
 
-    def _assemble_dirpath(self, source_path, dest_path):
-
-        return '__'.join((source_path, dest_path))
-
-    def _is_group_node(self, memmap_map_pos, node_name):
-
-        return memmap_map_pos[node_name]['node_type'] == 'group'
-
-    def _is_array_node(self, memmap_map_pos, node_name):
-
-        return memmap_map_pos[node_name]['node_type'] == 'array'      
-    
     def get_array(self, array_filepath, idx=None):
         
         memmap_map_array_pos = self.retrieve_memmap_map_pos_array(array_filepath)
@@ -264,7 +252,6 @@ class BaseHMF():
 
     def set_node_attr(self, attr_dirpath, key, value):
 
-
         self.update_memmap_map_group(attr_dirpath)
             
         memmap_map_group_pos = self.retrieve_memmap_map_pos_group(attr_dirpath)
@@ -276,3 +263,16 @@ class BaseHMF():
         memmap_map_group_pos = self.retrieve_memmap_map_pos_group(attr_dirpath)
 
         return memmap_map_group_pos['attributes'][key]
+
+    def _assemble_dirpath(self, source_path, dest_path):
+
+        return '__'.join((source_path, dest_path))
+
+    def _is_group_node(self, memmap_map_pos, node_name):
+
+        return memmap_map_pos[node_name]['node_type'] == 'group'
+
+    def _is_array_node(self, memmap_map_pos, node_name):
+
+        return memmap_map_pos[node_name]['node_type'] == 'array'      
+    
