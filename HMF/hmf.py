@@ -195,9 +195,9 @@ class HMF(BaseHMF):
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
 
+        self.group_sizes = np.diff(border_idx)
         self.group_names = group_names
         self.groups = list(zip(group_names, group_idx))
-
 
     def register_array(self, array_filename, col_names, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
@@ -210,21 +210,10 @@ class HMF(BaseHMF):
 
         if(encoder):
             data_array = encoder(self.pdf[col_names])
-
         else:
             data_array = self.pdf[col_names].values
         
-        # data_array = np.ascontiguousarray(data_array)
-        
-
-        # #FIX  
-        # tmp = np.ctypeslib.as_ctypes(data_array)
-        shared_data_array = data_array
-
-        # shared_data_array = data_array
-
-        
-        self.arrays.append((array_filename, shared_data_array))
+        self.arrays.append((array_filename, data_array))
 
     def register_node_attr(self, attr_dirpath, key, value):
 
