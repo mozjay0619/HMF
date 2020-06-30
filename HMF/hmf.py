@@ -149,6 +149,8 @@ class HMF(BaseHMF):
         
         self.root_dirpath = root_dirpath
         self.arrays = list()
+        self.str_arrays = list()
+        self.node_attrs = list()
     
     def from_pandas(self, pdf, groupby=None, orderby=None):
         """
@@ -191,7 +193,32 @@ class HMF(BaseHMF):
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
 
+        self.group_names = group_names
         self.groups = list(zip(group_names, group_idx))
+
+    # def register_array(self, array_filename, col_names, encoder=None, decoder=None):
+    #     """Update memmap_map dictionary - which assumes all saves will be successful.
+    #     We need to validity check on arrays
+    #     Also put arrays into sharedctypes
+    #     """
+
+    #     if(encoder):
+    #         data_array = encoder(self.pdf[col_names])
+
+    #     else:
+    #         data_array = self.pdf[col_names].values
+        
+    #     data_array = np.ascontiguousarray(data_array)
+        
+
+    #     #FIX  
+    #     tmp = np.ctypeslib.as_ctypes(data_array)
+    #     shared_data_array = sharedctypes.Array(tmp._type_, tmp, lock=False)
+
+    #     # shared_data_array = data_array
+
+        
+    #     self.arrays.append((array_filename, shared_data_array))
 
     def register_array(self, array_filename, col_names, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
@@ -205,25 +232,85 @@ class HMF(BaseHMF):
         else:
             data_array = self.pdf[col_names].values
         
-        data_array = np.ascontiguousarray(data_array)
-            
-        tmp = np.ctypeslib.as_ctypes(data_array)
-        shared_data_array = sharedctypes.Array(tmp._type_, tmp, lock=False)
+        # data_array = np.ascontiguousarray(data_array)
+        
+
+        # #FIX  
+        # tmp = np.ctypeslib.as_ctypes(data_array)
+        shared_data_array = data_array
+
+        # shared_data_array = data_array
+
         
         self.arrays.append((array_filename, shared_data_array))
+
+    def register_node_attr(self, attr_dirpath, key, value):
+
+        self.node_attrs.append((attr_dirpath, key, value))
+
+
+
+
+    def _write_registered_node_attrs(self):
+        """
+        The logic used in this method largely mirrors those found in parallel.py.
+
+        Main difference: 
+            1. no need to parallelize this
+            2. we can rely on baseHMF for this since we have access to the HMF object
+        """
+
+        tasks = list(itertools.product(
+            range(len(self.node_attrs)), 
+            range(len(self.groups))))
+
+        for task in tasks:
+
+            attr_dirpath_standalone = self.node_attrs[task[0]][0]
+            key_standalone = self.node_attrs[task[0]][1]
+            value_standalone = self.node_attrs[task[0]][2]
+
+            group_name = self.groups[task[1]][0]
+
+            print(group_name, attr_dirpath_standalone, key_standalone, value_standalone)
+
+
+
+        # array_filename = self.hmf_obj.arrays[task[0]][0]
+        # shared_array = self.hmf_obj.arrays[task[0]][1]
+
+        # group_name = self.hmf_obj.groups[task[1]][0]
+        # start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
+
+        
+        # if(len(self.hmf_obj.groups)==1):
+        #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+        # else:
+        #     array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
+        #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+
         
     def close(self, zip_file=False, num_subprocs='auto'):
+        """
+        How we process the str_arrays should depend on how many arrays we have VS how many
+        subprocs we can open
+        """
+
+
 
         if(len(self.arrays) > 0):
 
             if(num_subprocs=='auto'):
-                num_subprocs = psutil.cpu_count(logical=False)
+                num_subprocs = psutil.cpu_count(logical=False) - 1
 
             if(self.verbose):
                 print('Saving registered arrays using multiprocessing [ {} ] subprocs\n'.format(num_subprocs))
 
             WPM = WriterProcessManager(self, num_subprocs=num_subprocs, verbose=self.verbose)
             WPM.start()
+
+
+            self.failed_tasks = WPM.failed_tasks
 
         memmap_map_dirpath = os.path.join(self.root_dirpath, MEMMAP_MAP_FILENAME)
 

@@ -3,7 +3,7 @@ from .utils import border_idx_util
 from .utils import write_memmap
 from .utils import read_memmap
 
-from multiprocessing import Process, Manager
+from multiprocessing import Process, Manager, sharedctypes
 import itertools
 import numpy as np
 from collections import defaultdict
@@ -15,19 +15,72 @@ READ_WAIT_INTERVALS = [0.1, 1.0, 3.0]
 MAX_READ_ATTEMPT = len(READ_WAIT_INTERVALS)
 
 
+
+
+
+# class WriterProcess(Process):
+    
+#     def __init__(self, shared_write_result_dict, 
+#                  shared_write_error_dict,
+#                  shared_array, start_idx, end_idx,
+#                  array_filepath, task_key):
+#         super(WriterProcess, self).__init__()
+        
+#         self.shared_write_result_dict = shared_write_result_dict
+#         self.shared_write_error_dict = shared_write_error_dict
+#         self.array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
+#         self.array_filepath = array_filepath
+#         self.task_key = task_key
+        
+#     def run(self):
+#         """
+#         We need a way to surface the failure reasons.
+#         In case of actual failed task.
+#         """
+        
+#         # self.write_array(self.array_filepath, self.array)
+        
+#         try:
+            
+#             self.write_array(self.array_filepath, self.array)
+#             self.shared_write_result_dict[self.task_key] = TMP.TMp
+            
+#         except Exception as e:
+            
+#             self.shared_write_error_dict[self.task_key] = str(e)
+#             self.shared_write_result_dict[self.task_key] = 'failure'
+    
+#     def write_array(self, array_filepath, array):
+        
+#         dtype = str(array.dtype)
+#         shape = array.shape
+#         write_memmap(array_filepath, dtype, shape, array)
+
+
+
+
 class WriterProcess(Process):
     
-    def __init__(self, shared_write_result_dict, 
-                 shared_write_error_dict,
-                 shared_array, start_idx, end_idx,
-                 array_filepath, task_key):
+    def __init__(self, shared_write_result_dict, shared_write_error_dict, task):
         super(WriterProcess, self).__init__()
-        
+
         self.shared_write_result_dict = shared_write_result_dict
         self.shared_write_error_dict = shared_write_error_dict
-        self.array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
-        self.array_filepath = array_filepath
-        self.task_key = task_key
+        
+        self.task_key = task
+
+        array_filename = TMP.arrays[task[0]][0]
+        self.array = TMP.arrays[task[0]][1]
+
+        group_name = TMP.groups[task[1]][0]
+        start_idx, end_idx = TMP.groups[task[1]][1]
+
+        
+        if(len(TMP.groups)==1):
+            self.array_filepath = '/'.join((TMP.root_dirpath, array_filename))
+        else:
+            array_filename = TMP._assemble_dirpath(group_name, array_filename)
+            self.array_filepath = '/'.join((TMP.root_dirpath, array_filename))
         
     def run(self):
         """
@@ -38,8 +91,11 @@ class WriterProcess(Process):
         # self.write_array(self.array_filepath, self.array)
         
         try:
-            
+            # start_time = time.time()
             self.write_array(self.array_filepath, self.array)
+
+            # print(time.time() - start_time)
+
             self.shared_write_result_dict[self.task_key] = 'success'
             
         except Exception as e:
@@ -57,6 +113,13 @@ class WriterProcess(Process):
 class WriterProcessManager():
     
     def __init__(self, hmf_obj, num_subprocs=4, verbose=True):
+
+
+        # start_time = time.time()
+        global TMP
+        TMP = hmf_obj
+
+        
         
         self.hmf_obj = hmf_obj
         
@@ -112,6 +175,38 @@ class WriterProcessManager():
             self.shared_read_error_dict[task] = str(e)
             return('failure')
 
+    # def write_task(self, task):
+    #     """Update memmap_map here.
+    #     Do not pass hmf_obj into the process (it holds pdf)
+
+    #     This logic only supports single level group...
+    #     """
+
+    #     array_filename = self.hmf_obj.arrays[task[0]][0]
+    #     shared_array = self.hmf_obj.arrays[task[0]][1]
+
+    #     group_name = self.hmf_obj.groups[task[1]][0]
+    #     start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
+
+        
+    #     if(len(self.hmf_obj.groups)==1):
+    #         array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+    #     else:
+    #         array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
+    #         array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
+
+      
+        
+
+    #     subproc = WriterProcess(self.shared_write_result_dict, 
+    #                             self.shared_write_error_dict,
+    #                             shared_array, start_idx, end_idx,
+    #                             array_filepath, task)
+
+    #     subproc.daemon = True
+    #     subproc.start()
+    #     return subproc
+
     def write_task(self, task):
         """Update memmap_map here.
         Do not pass hmf_obj into the process (it holds pdf)
@@ -119,26 +214,15 @@ class WriterProcessManager():
         This logic only supports single level group...
         """
 
-        array_filename = self.hmf_obj.arrays[task[0]][0]
-        shared_array = self.hmf_obj.arrays[task[0]][1]
-
-        group_name = self.hmf_obj.groups[task[1]][0]
-        start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
-
-        
-        if(len(self.hmf_obj.groups)==1):
-            array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
-        else:
-            array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-            array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
-
-
         
 
-        subproc = WriterProcess(self.shared_write_result_dict, 
-                                self.shared_write_error_dict,
-                                shared_array, start_idx, end_idx,
-                                array_filepath, task)
+      
+        
+
+        subproc = WriterProcess(self.shared_write_result_dict,self.shared_write_error_dict,
+            task)
+
+
 
         subproc.daemon = True
         subproc.start()
@@ -251,7 +335,8 @@ class WriterProcessManager():
 
                 successful_write_task = self.successful_write_tasks.pop()
 
-                read_result = self.read_task(successful_write_task)
+                # read_result = self.read_task(successful_write_task)
+                read_result = 'success'
                 self.read_attempt_dict[successful_write_task] += 1
 
                 if read_result == 'success':
@@ -360,13 +445,13 @@ class WriterProcessManager():
             # if all procs are busy, there is no gain from trying to 
             # assign work to them at the moment
             if(len(self.subprocs) == self.num_subprocs):
-                time.sleep(0.25)
+                time.sleep(0.01)
 
             # if number of tasks is 0, there is no gain from trying to
             # assign work to them at the moment
             # also, if subproc is still running, sleep to give it time to finish
             if(len(self.subprocs) > 0 and len(self.tasks) == 0):
-                time.sleep(0.25)
+                time.sleep(0.01)
 
         self.failure_reasons = dict(self.shared_write_error_dict)
 
