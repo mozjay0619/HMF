@@ -78,6 +78,10 @@ class BaseHMF():
         memmap_map_pos = self.memmap_map['nodes']
         # dict with node_names of group names / array names
 
+        if(group_dirpath=='/'):
+            print('a')
+            return 
+
         # iterate through each level of group (horizontal traversal)
         for idx, node_name in enumerate(group_dirpath.split('/')):
 
@@ -145,6 +149,10 @@ class BaseHMF():
         check if it is indeed a group
 
         """
+
+        if(group_dirpath=='/'):
+            return self.memmap_map
+
         memmap_map_pos = self.memmap_map['nodes']
         
         for idx, node_name in enumerate(group_dirpath.split('/')):
