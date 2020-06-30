@@ -70,10 +70,13 @@ class WriterProcess(Process):
         self.task_key = task
 
         array_filename = TMP.arrays[task[0]][0]
-        self.array = TMP.arrays[task[0]][1]
+        
 
         group_name = TMP.groups[task[1]][0]
         start_idx, end_idx = TMP.groups[task[1]][1]
+
+
+        self.array = TMP.arrays[task[0]][1][start_idx:end_idx]
 
         
         if(len(TMP.groups)==1):
