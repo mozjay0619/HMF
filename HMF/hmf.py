@@ -144,13 +144,15 @@ def _depth_first_search(m, k, visited_dirpaths, array_dirpaths):
 
 class HMF(BaseHMF):
     
-    def __init__(self, root_dirpath, memmap_map, verbose=True):
+    def __init__(self, root_dirpath, memmap_map, verbose=True, show_progress=True):
         super(HMF, self).__init__(root_dirpath, memmap_map, verbose)
         
         self.root_dirpath = root_dirpath
         self.arrays = list()
         self.str_arrays = list()
         self.node_attrs = list()
+
+        self.show_progress = show_progress
     
     def from_pandas(self, pdf, groupby=None, orderby=None):
         """
@@ -165,7 +167,7 @@ class HMF(BaseHMF):
             self.pdf = self.pdf.sort_values(by=[groupby, orderby]).reset_index(drop=True)
             group_array = self.pdf[GROUPBY_ENCODER].values
 
-            tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
+            tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
             
@@ -196,35 +198,15 @@ class HMF(BaseHMF):
         self.group_names = group_names
         self.groups = list(zip(group_names, group_idx))
 
-    # def register_array(self, array_filename, col_names, encoder=None, decoder=None):
-    #     """Update memmap_map dictionary - which assumes all saves will be successful.
-    #     We need to validity check on arrays
-    #     Also put arrays into sharedctypes
-    #     """
-
-    #     if(encoder):
-    #         data_array = encoder(self.pdf[col_names])
-
-    #     else:
-    #         data_array = self.pdf[col_names].values
-        
-    #     data_array = np.ascontiguousarray(data_array)
-        
-
-    #     #FIX  
-    #     tmp = np.ctypeslib.as_ctypes(data_array)
-    #     shared_data_array = sharedctypes.Array(tmp._type_, tmp, lock=False)
-
-    #     # shared_data_array = data_array
-
-        
-    #     self.arrays.append((array_filename, shared_data_array))
 
     def register_array(self, array_filename, col_names, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
         We need to validity check on arrays
         Also put arrays into sharedctypes
         """
+
+        if(not isinstance(col_names, list)):
+            col_names = [col_names]
 
         if(encoder):
             data_array = encoder(self.pdf[col_names])
