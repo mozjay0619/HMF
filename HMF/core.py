@@ -79,7 +79,6 @@ class BaseHMF():
         # dict with node_names of group names / array names
 
         if(group_dirpath=='/'):
-            print('a')
             return 
 
         # iterate through each level of group (horizontal traversal)
