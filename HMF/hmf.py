@@ -13,8 +13,8 @@ import psutil
 from multiprocessing import sharedctypes
 
 
-GROUPBY_ENCODER = "__HMF__groupByNumericEncoder"
-MEMMAP_MAP_FILENAME = "__HMF__memmapMapName"
+GROUPBY_ENCODER = "__specialHMF__groupByNumericEncoder"
+MEMMAP_MAP_FILENAME = "__specialHMF__memmapMap"
 
 
 def open_file(root_path, mode='w+', verbose=False):
@@ -205,13 +205,11 @@ class HMF(BaseHMF):
         Also put arrays into sharedctypes
         """
 
-        if(not isinstance(col_names, list)):
-            col_names = [col_names]
-
         if(encoder):
             data_array = encoder(self.pdf[col_names])
         else:
             data_array = self.pdf[col_names].values
+            
         
         self.arrays.append((array_filename, data_array))
 

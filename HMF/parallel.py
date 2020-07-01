@@ -160,6 +160,7 @@ class WriterProcessManager():
         group_name = self.hmf_obj.groups[task[1]][0]
         start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
 
+
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
 
@@ -167,6 +168,8 @@ class WriterProcessManager():
             array_filepath = '/'.join(('', array_filename))
         else:
             array_filepath = '/'.join(('', group_name, array_filename))
+
+        
 
         self.hmf_obj.update_memmap_map_array(array_filepath, array)
 
