@@ -363,7 +363,15 @@ class WriterProcessManager():
                         self.pending_tasks.insert(0, pending_task)
 
                     if(self.show_progress):
-                        cur_len = int((len(self.successful_tasks) + len(self.failed_tasks))/self.max_len * 100) 
+
+
+
+                        # cur_len = int((len(self.successful_tasks) + len(self.failed_tasks))/self.max_len * 100) 
+                        cur_len = int(len(self.successful_tasks) + len(self.failed_tasks)) 
+
+                        # print(cur_len/self.max_len, cur_len, self.max_len)
+
+
                         printProgressBar(cur_len, self.max_len, prefix = 'Progress:', suffix = '', length = 50)
                     
 
@@ -390,6 +398,6 @@ class WriterProcessManager():
         self.failure_reasons = dict(self.shared_write_error_dict)
 
         if(self.show_progress):
-            printProgressBar(100, self.max_len, prefix = 'Progress:', suffix = 'Completed!', length = 50)
+            printProgressBar(self.max_len, self.max_len, prefix = 'Progress:', suffix = 'Completed!', length = 50)
             print()
 
