@@ -44,23 +44,23 @@ def open_file(root_path, mode='w+', verbose=False):
 
     elif(mode=='r+'):
 
-        if(os.path.exists(root_path)):
+        # if(os.path.exists(root_path)):
 
-            is_hmf_directory_flag, memmap_map = is_hmf_directory(root_path)
+        is_hmf_directory_flag, memmap_map = is_hmf_directory(root_path)
 
-            if(is_hmf_directory_flag):
+            # if(is_hmf_directory_flag):
 
-                from_existing = True
+            #     from_existing = True
 
-            else:
+            # else:
 
-                from_existing = False
+            #     from_existing = False
 
-                # warn that it is not
-                # memmap not there
-                # try to recover...
+            #     # warn that it is not
+            #     # memmap not there
+            #     # try to recover...
 
-                pass
+            #     pass
 
     hmf = HMF(root_path, memmap_map, verbose)
 
