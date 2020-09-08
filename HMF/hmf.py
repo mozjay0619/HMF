@@ -15,6 +15,7 @@ from multiprocessing import sharedctypes
 
 GROUPBY_ENCODER = "__specialHMF__groupByNumericEncoder"
 MEMMAP_MAP_FILENAME = "__specialHMF__memmapMap"
+NUM_FILE_COPY = 3
 
 
 def open_file(root_path, mode='w+', verbose=False):
@@ -75,11 +76,18 @@ def is_hmf_directory(root_path):
 
     file_list = os.listdir(root_path)
 
-    if MEMMAP_MAP_FILENAME not in file_list:
+    # if MEMMAP_MAP_FILENAME not in file_list:
+    #     print('memmap_map not present')
+    #     return(False, None)
+
+    if not fail_safe_check_obj(root_path, MEMMAP_MAP_FILENAME):
+
         print('memmap_map not present')
         return(False, None)
 
-    memmap_map = load_obj(os.path.join(root_path, MEMMAP_MAP_FILENAME))
+
+
+    memmap_map = fail_safe_load_obj(os.path.join(root_path, MEMMAP_MAP_FILENAME))
 
     array_file_list = get_all_array_dirpaths(memmap_map)
 
@@ -283,5 +291,51 @@ class HMF(BaseHMF):
 
         memmap_map_dirpath = os.path.join(self.root_dirpath, MEMMAP_MAP_FILENAME)
 
-        save_obj(self.memmap_map, memmap_map_dirpath)
+        fail_safe_save_obj(self.memmap_map, memmap_map_dirpath)
+
+
+# PR 0.0.b16
+def fail_safe_save_obj(obj, dirpath):
+
+    for i in range(NUM_FILE_COPY):
+
+        try:
+
+            copy_dirpath = dirpath + str(i)
+
+            save_obj(obj, copy_dirpath)
+
+        except:
+
+            continue
+
+def fail_safe_load_obj(dirpath):
+
+    for i in range(NUM_FILE_COPY):
+
+        try:
+
+            copy_dirpath = dirpath + str(i)
+
+            return load_obj(copy_dirpath)
+
+        except:
+
+            continue
+
+def fail_safe_check_obj(root_path, filename):
+
+    file_list = os.listdir(root_path)
+
+    for i in range(NUM_FILE_COPY):
+
+        copy_filename = filename + str(i)
+
+        if copy_filename in file_list:
+
+            return True
+
+
+
+
             
