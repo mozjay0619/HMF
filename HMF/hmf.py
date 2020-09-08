@@ -74,7 +74,7 @@ def is_hmf_directory(root_path):
     Needs much improvements...
     """
 
-    file_list = os.listdir(root_path)
+    # file_list = os.listdir(root_path)
 
     # if MEMMAP_MAP_FILENAME not in file_list:
     #     print('memmap_map not present')
@@ -89,11 +89,11 @@ def is_hmf_directory(root_path):
 
     memmap_map = fail_safe_load_obj(os.path.join(root_path, MEMMAP_MAP_FILENAME))
 
-    array_file_list = get_all_array_dirpaths(memmap_map)
+    # array_file_list = get_all_array_dirpaths(memmap_map)
 
-    if(not set(array_file_list) < set(file_list)):
+    # if(not set(array_file_list) < set(file_list)):
 
-        return(False, None)
+    #     return(False, None)
 
     return(True, memmap_map)
 
