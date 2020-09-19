@@ -14,10 +14,10 @@ def load_obj(filepath):
 
 
     f = os.open(filepath, os.O_RDONLY|os.O_NONBLOCK)
-    
+
     readable = os.fdopen(f, "rb", 0)
 
-    if select.select([readable], [], [], timeout=10)[0][0] == readable:
+    if select.select([readable], [], [], 10)[0][0] == readable:
 
         return pickle.load(readable)
 

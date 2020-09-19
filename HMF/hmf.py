@@ -322,6 +322,8 @@ def fail_safe_load_obj(dirpath):
         except:
 
             continue
+            
+    raise IOError("Damn it, failed to read file again")
 
 def fail_safe_check_obj(root_path, filename):
 
