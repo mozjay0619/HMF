@@ -2,14 +2,24 @@ import numpy as np
 import pickle
 import functools
 import time
+import os
 
 def save_obj(obj, filepath):
     with open(filepath, 'wb') as f:
         pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
         
 def load_obj(filepath):
-    with open(filepath, 'rb') as f:
-        return pickle.load(f)
+    # with open(filepath, 'rb') as f:
+    #     return pickle.load(f)
+
+
+    f = os.open(filepath, os.O_RDONLY|os.O_NONBLOCK)
+    
+    readable = os.fdopen(f, "rb", 0)
+
+    if select.select([readable], [], [], timeout=10)[0][0] == readable:
+
+        return pickle.load(readable)
 
 def stride_util(array, window_size, skip_size, dtype):
     
