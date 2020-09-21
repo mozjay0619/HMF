@@ -328,30 +328,20 @@ class HMF(BaseHMF):
 
     def del_pdf(self):
 
-        try:
-            del self.pdf
-        except AttributeError:
-            pass
-
         try: 
             del self.pdf
         except Exception as e:
-            if (type(e)==AttributeError):
-                raise Exception('pdf was never present')
+            if not (type(e)==AttributeError):
+                raise Exception('failed to delete pdf')
 
 
     def del_arrays(self):
 
-        try:
-            del self.arrays
-        except AttributeError:
-            pass
-
         try: 
             del self.arrays
         except Exception as e:
-            if (type(e)==AttributeError):
-                raise Exception('arrays was never present')
+            if not (type(e)==AttributeError):
+                raise Exception('failed to delete arrays')
 
 
 
