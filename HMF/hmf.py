@@ -322,6 +322,9 @@ class HMF(BaseHMF):
 
         fail_safe_save_obj(self.memmap_map, memmap_map_dirpath)
 
+        del self.pdf
+        del self.arrays
+
 
 # PR 0.0.b16
 def fail_safe_save_obj(obj, dirpath):
