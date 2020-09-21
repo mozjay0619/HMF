@@ -205,7 +205,36 @@ class HMF(BaseHMF):
 
         self.group_sizes = np.diff(border_idx)
         self.group_names = group_names
-        self.groups = list(zip(group_names, group_idx))
+        self.group_items = list(zip(group_names, group_idx))
+
+
+    def get_group_sizes(self):
+
+        return self.group_sizes
+
+    def get_group_names(self):
+
+        return self.group_names
+
+    def get_group_items(self):
+
+        return self.group_items
+
+    def get_sorted_group_items(self):
+
+        return sorted(zip(self.group_names, self.group_sizes), key=lambda x: x[1], reverse=True)
+
+    def get_sorted_group_names(self):
+
+        sorted_group_items = self.get_sorted_group_items()
+        return [elem[0] for elem in sorted_group_items]
+
+    def get_sorted_group_sizes(self):
+
+        sorted_group_items = self.get_sorted_group_items()
+        return [elem[1] for elem in sorted_group_items]
+
+
 
     def register_array(self, array_filename, col_names, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
