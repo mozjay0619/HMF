@@ -322,8 +322,37 @@ class HMF(BaseHMF):
 
         fail_safe_save_obj(self.memmap_map, memmap_map_dirpath)
 
-        del self.pdf
-        del self.arrays
+        self.del_pdf()
+        self.del_arrays()
+
+
+    def del_pdf(self):
+
+        try:
+            del self.pdf
+        except AttributeError:
+            pass
+
+        try: 
+            del self.pdf
+        except Exception as e:
+            if (type(e)==AttributeError):
+                raise Exception('pdf was never present')
+
+
+    def del_arrays(self):
+
+        try:
+            del self.arrays
+        except AttributeError:
+            pass
+
+        try: 
+            del self.arrays
+        except Exception as e:
+            if (type(e)==AttributeError):
+                raise Exception('arrays was never present')
+
 
 
 # PR 0.0.b16
