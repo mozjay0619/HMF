@@ -29,14 +29,14 @@ class WriterProcess(Process):
         array_filename = SHARED_HMF_OBJ.arrays[task[0]][0]
         
 
-        group_name = SHARED_HMF_OBJ.groups[task[1]][0]
-        start_idx, end_idx = SHARED_HMF_OBJ.groups[task[1]][1]
+        group_name = SHARED_HMF_OBJ.group_items[task[1]][0]
+        start_idx, end_idx = SHARED_HMF_OBJ.group_items[task[1]][1]
 
 
         self.array = SHARED_HMF_OBJ.arrays[task[0]][1][start_idx:end_idx]
 
         
-        if(len(SHARED_HMF_OBJ.groups)==1):
+        if(len(SHARED_HMF_OBJ.group_items)==1):
             self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
         else:
             array_filename = SHARED_HMF_OBJ._assemble_dirpath(group_name, array_filename)
@@ -83,7 +83,7 @@ class WriterProcessManager():
         
         self.tasks = list(itertools.product(
             range(len(hmf_obj.arrays)), 
-            range(len(hmf_obj.groups))))
+            range(len(hmf_obj.group_items))))
         self.pending_tasks = []
         self.failed_tasks = []
         self.successful_tasks = []
@@ -114,14 +114,14 @@ class WriterProcessManager():
         array_filename = self.hmf_obj.arrays[task[0]][0]
         shared_array = self.hmf_obj.arrays[task[0]][1]
 
-        group_name = self.hmf_obj.groups[task[1]][0]
-        start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
+        group_name = self.hmf_obj.group_items[task[1]][0]
+        start_idx, end_idx = self.hmf_obj.group_items[task[1]][1]
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         # array_filepath = '/'.join(('', group_name, array_filename))
 
 
-        if(len(self.hmf_obj.groups)==1):
+        if(len(self.hmf_obj.group_items)==1):
             array_filepath = '/'.join(('', array_filename))
         else:
             array_filepath = '/'.join(('', group_name, array_filename))
@@ -157,14 +157,14 @@ class WriterProcessManager():
         array_filename = self.hmf_obj.arrays[task[0]][0]
         shared_array = self.hmf_obj.arrays[task[0]][1]
 
-        group_name = self.hmf_obj.groups[task[1]][0]
-        start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
+        group_name = self.hmf_obj.group_items[task[1]][0]
+        start_idx, end_idx = self.hmf_obj.group_items[task[1]][1]
 
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
 
-        if(len(self.hmf_obj.groups)==1):
+        if(len(self.hmf_obj.group_items)==1):
             array_filepath = '/'.join(('', array_filename))
         else:
             array_filepath = '/'.join(('', group_name, array_filename))
