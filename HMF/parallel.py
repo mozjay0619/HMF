@@ -10,6 +10,7 @@ import numpy as np
 from collections import defaultdict
 import time
 
+from . import constants
 
 MAX_WRITE_ATTEMPT = 3
 READ_WAIT_INTERVALS = [0.1, 1.0, 3.0]
@@ -35,8 +36,7 @@ class WriterProcess(Process):
 
         self.array = SHARED_HMF_OBJ.arrays[task[0]][1][start_idx:end_idx]
 
-        
-        if(len(SHARED_HMF_OBJ.group_items)==1):
+        if(len(SHARED_HMF_OBJ.group_items)==1 and SHARED_HMF_OBJ.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
             self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
         else:
             array_filename = SHARED_HMF_OBJ._assemble_dirpath(group_name, array_filename)
@@ -121,11 +121,10 @@ class WriterProcessManager():
         # array_filepath = '/'.join(('', group_name, array_filename))
 
 
-        if(len(self.hmf_obj.group_items)==1):
+        if(len(self.hmf_obj.group_items)==1 and self.hmf_obj.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
             array_filepath = '/'.join(('', array_filename))
         else:
             array_filepath = '/'.join(('', group_name, array_filename))
-
 
 
         try: 
@@ -143,7 +142,7 @@ class WriterProcessManager():
         This logic only supports single level group...
         """
 
-        subproc = WriterProcess(self.shared_write_result_dict,self.shared_write_error_dict,
+        subproc = WriterProcess(self.shared_write_result_dict, self.shared_write_error_dict,
             task)
 
 
@@ -164,7 +163,7 @@ class WriterProcessManager():
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
 
-        if(len(self.hmf_obj.group_items)==1):
+        if(len(self.hmf_obj.group_items)==1 and self.hmf_obj.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
             array_filepath = '/'.join(('', array_filename))
         else:
             array_filepath = '/'.join(('', group_name, array_filename))

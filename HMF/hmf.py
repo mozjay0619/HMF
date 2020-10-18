@@ -12,6 +12,8 @@ import shutil
 import psutil
 from multiprocessing import sharedctypes
 
+from . import constants
+
 
 GROUPBY_ENCODER = "__specialHMF__groupByNumericEncoder"
 MEMMAP_MAP_FILENAME = "__specialHMF__memmapMap"
@@ -183,7 +185,7 @@ class HMF(BaseHMF):
             self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
 
             group_array = np.zeros(len(pdf))
-            group_names = ['0']
+            group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
             
         elif groupby:
             self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
@@ -198,7 +200,7 @@ class HMF(BaseHMF):
             
         else:
             group_array = np.zeros(len(pdf))
-            group_names = ['0']
+            group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
             
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
