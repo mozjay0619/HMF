@@ -163,6 +163,8 @@ class HMF(BaseHMF):
         self.node_attrs = list()
 
         self.show_progress = show_progress
+
+        self.dataframe_colnames = dict()
     
     def from_pandas(self, pdf, groupby=None, orderby=None):
         """
@@ -256,7 +258,19 @@ class HMF(BaseHMF):
 
         self.node_attrs.append((attr_dirpath, key, value))
 
+    def register_dataframe(self, dataframe_filename, col_names):
 
+        self.register_array(dataframe_filename, col_names)
+
+        self.dataframe_colnames[dataframe_filename] = col_names
+
+    def get_dataframe(self, dataframe_filepath, idx=None):
+
+        array = self.get_array(dataframe_filepath, idx)
+        dataframe_filename = dataframe_filepath.split('/')[-1]
+        col_names = self.dataframe_colnames[dataframe_filename]
+        dataframe = pd.DataFrame(array, columns=col_names)
+        return dataframe
 
 
     def _write_registered_node_attrs(self):
