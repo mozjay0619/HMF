@@ -213,14 +213,21 @@ You can then specify ``groupby``:
 
     f.close()
 
-Now, when you get the array, the groups have been automatically created, defined by the value of the groupby column:
+    # Progress: |██████████████████████████████████████████████████| 100.0% Completed!
+
+Now, when you get the array, the groups have been automatically created, defined by the value of the groupby column, and you can query them using ``get_array``:
 
 .. code:: python
 
-	f.get_array('/Aaa/arrayA')  # get arrayA for partition group "Aaa"
-	f.get_array('/Ccc/arrayB')  # get arrayB for partition group "Ccc"
+	f.get_array('/group_1/arrayA')  # get data array "arrayA" for partition group "group_1"
 
+    # memmap([[1, 2],
+    #         [4, 5]])
 
+	f.get_array('/group_3/arrayB')  # get data array "arrayB" for partition group "group_3"
+
+    # memmap([[12, 13],
+    #         [15, 16]])
 
 
 
