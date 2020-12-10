@@ -219,12 +219,12 @@ Now, when you get the array, the groups have been automatically created, defined
 
 .. code:: python
 
-	f.get_array('/group_1/arrayA')  # get data array "arrayA" for partition group "group_1"
+    f.get_array('/group_1/arrayA')  # get data array "arrayA" for partition group "group_1"
 
     # memmap([[1, 2],
     #         [4, 5]])
 
-	f.get_array('/group_3/arrayB')  # get data array "arrayB" for partition group "group_3"
+    f.get_array('/group_3/arrayB')  # get data array "arrayB" for partition group "group_3"
 
     # memmap([[12, 13],
     #         [15, 16]])
@@ -233,9 +233,29 @@ Now, when you get the array, the groups have been automatically created, defined
 Getting back dataframe 
 -----------------------
 
+What if you want to get the dataframe back instead of numpy array or memmap? You must register dataframe instead of array in this case:
 
+.. code:: python
 
+    f.register_dataframe('arrayA', ['b', 'c'])
+    f.register_dataframe('arrayB', ['a', 'b'])
 
+    f.close()
+
+Then you can retrieve the data either as numpy array (or memmap) or dataframe: (in both cases, the ``idx`` parameter works the same way)
+
+.. code:: python
+
+    f.get_dataframe('/group_3/arrayB')
+
+    # 		a	b
+    #   0	12	13
+    #   1	15	16
+
+    f.get_array('/group_3/arrayB')
+
+    # memmap([[12, 13],
+    #         [15, 16]])
 
 
 
