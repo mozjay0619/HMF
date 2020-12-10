@@ -258,24 +258,23 @@ Then you can retrieve the data either as numpy array (or memmap) or dataframe: (
     # memmap([[12, 13],
     #         [15, 16]])
 
-Convenient methods
----------------------
+Convenient methods when working with Pandas
+--------------------------------------------
 
-HMF object, namely ``f`` in our examples, is meant to be used as a single file handler that can be used alone to write and query data easily. 
+HMF object, namely ``f`` in our examples, is meant to be used as a single file handler that can be used alone to write and query data easily. The following methods are provided to further this goal of ease of use when ``from_pandas`` is used:
 
+.. code:: python
 
+    f.get_group_names()  # returns names of the groups 
 
+    f.get_group_sizes()  # returns the sizes of the groups (i.e. number of rows in each group)
 
+    f.get_group_items()  # returns the tuple of (name, size)
 
+    f.get_sorted_group_names()  # returns names of the groups sorted by the group size
 
+    f.get_sorted_group_sizes()  # returns sizes of the groups sorted by the group size
 
-
-
-
-
-
-
-
-
+    f.get_sorted_group_items()  # returns the tuple of (name, size) sorted by the group size
 
 
