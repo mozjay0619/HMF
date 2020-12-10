@@ -105,8 +105,6 @@ Slicing will return view of the memmap.
 
 Fancy indexing will return copy of the memmap.
 
-Currently, fancy indexing will copy the entire memmap object first. Future update will fix this. 
-
 
 Writing node attributes
 -----------------------
@@ -185,14 +183,22 @@ The power of parallel writing shines when you have many arrays to write at once,
 
 .. code:: python
 
-	import numpy as np
-	import pandas as pd
+    import numpy as np
+    import pandas as pd
 
-	data = np.arange(10*3).reshape((10, 3))
-	pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
+    data = np.arange(10*3).reshape((10, 3))
+    pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
 
-	group_col = ['Aaa', 'Aaa', 'Aaa', 'Bbb', 'Bbb', 'Bbb', 'Ccc', 'Ccc', 'Ccc', 'Ccc']
-	pdf['groups'] = group_col
+    group_col = ['group_A', 'group_A', 'group_B', 'group_B', 'group_C', 'group_C']
+    pdf['groups'] = group_col
+
+    #   a	b	c	groups
+    #   0	0	1	2	group_A
+    #   1	3	4	5	group_A
+    #   2	6	7	8	group_B
+    #   3	9	10	11	group_B
+    #   4	12	13	14	group_C
+    #   5	15	16	17	group_C
 
 	f = HMF.open_file('pandasExample', mode='w+')
 
