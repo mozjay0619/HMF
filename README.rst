@@ -261,7 +261,7 @@ Then you can retrieve the data either as numpy array (or memmap) or dataframe: (
 Convenient methods when working with Pandas
 --------------------------------------------
 
-HMF object, namely ``f`` in our examples, is meant to be used as a single file handler that can be used alone to write and query data easily. The following methods are provided to further this goal of ease of use when ``from_pandas`` is used:
+The HMF object, namely ``f`` in our examples, is meant to be used as a single file handler that can be used alone to write and query data easily. The following methods are provided to further this goal of ease of use when ``from_pandas`` is used:
 
 .. code:: python
 
