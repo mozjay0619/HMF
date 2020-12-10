@@ -136,7 +136,7 @@ Finally calling ``close`` to save the data:
 
 	f.close()
 
-	Progress: |██████████████████████████████████████████████████| 100.0% Completed!
+	# Progress: |██████████████████████████████████████████████████| 100.0% Completed!
 
 You can now retrieve the memmap object the usual way:
 
@@ -145,8 +145,8 @@ You can now retrieve the memmap object the usual way:
 	f.get_array('/arrayA')
 
 	# memmap([[1, 2],
-	#	  	  [4, 5],
-	#		  [7, 8]])
+	#         [4, 5],
+	#         [7, 8]])
 
 
 
