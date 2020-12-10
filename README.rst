@@ -60,7 +60,7 @@ We can write data array using ``set_array`` method:
     #        [3, 4, 5],
     #        [6, 7, 8]])
 
-	f.set_array('/groupA/array1', array)  
+    f.set_array('/groupA/array1', array)  
 
 You need not create the group ahead of time. If groupA does not exist, the above code will create the groupA as well. Also, most importatly, the above code will create a memory-map to the array, which you can find out more about `here <https://numpy.org/doc/stable/reference/generated/numpy.memmap.html>`_
 
@@ -68,7 +68,7 @@ Again, once you are done writing data, don't forget to invoke ``close``!
 
 .. code:: python
 	
-	f.close() 
+    f.close() 
 
 Reading groups and arrays
 -------------------------
@@ -77,9 +77,9 @@ You can retrieve both the groups as well as arrays using ``get_group`` and ``get
 
 .. code:: python
 	
-	memmap_obj = f.get_array('/groupA/array1')  
+    memmap_obj = f.get_array('/groupA/array1')  
 
-	# memmap([[0, 1, 2],
+    # memmap([[0, 1, 2],
     #         [3, 4, 5],
     #         [6, 7, 8]])
 
@@ -89,18 +89,18 @@ You can also use slice or fancy indexing to retrieve partial data using ``idx`` 
 
 .. code:: python
 
-	f.get_array('/groupA/array1', idx=slice(0, 2))
+    f.get_array('/groupA/array1', idx=slice(0, 2))
 
-	# memmap([[0, 1, 2],
+    # memmap([[0, 1, 2],
     #         [3, 4, 5]])
 
 Slicing will return view of the memmap.
 
 .. code:: python
 
-	f.get_array('/groupA/array1', idx=[0, 2])
+    f.get_array('/groupA/array1', idx=[0, 2])
 
-	# array([[0, 1, 2],
+    # array([[0, 1, 2],
     #        [6, 7, 8]])
 
 Fancy indexing will return copy of the memmap.
