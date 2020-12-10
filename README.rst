@@ -192,7 +192,7 @@ The power of parallel writing shines when you have many arrays to write at once,
     group_col = ['group_A', 'group_A', 'group_B', 'group_B', 'group_C', 'group_C']
     pdf['groups'] = group_col
 
-    #       a	b	c	groups
+    #   	a	b	c	groups
     #   0	0	1	2	group_A
     #   1	3	4	5	group_A
     #   2	6	7	8	group_B
