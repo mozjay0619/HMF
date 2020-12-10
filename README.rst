@@ -189,29 +189,29 @@ The power of parallel writing shines when you have many arrays to write at once,
     data = np.arange(10*3).reshape((10, 3))
     pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
 
-    group_col = ['group_A', 'group_A', 'group_B', 'group_B', 'group_C', 'group_C']
+    group_col = ['group_1', 'group_1', 'group_2', 'group_2', 'group_3', 'group_3']
     pdf['groups'] = group_col
 
     #   	a	b	c	groups
-    #   0	0	1	2	group_A
-    #   1	3	4	5	group_A
-    #   2	6	7	8	group_B
-    #   3	9	10	11	group_B
-    #   4	12	13	14	group_C
-    #   5	15	16	17	group_C
+    #   0	0	1	2	group_1
+    #   1	3	4	5	group_1
+    #   2	6	7	8	group_2
+    #   3	9	10	11	group_2
+    #   4	12	13	14	group_3
+    #   5	15	16	17	group_3
 
-	f = HMF.open_file('pandasExample', mode='w+')
+    f = HMF.open_file('pandasExample', mode='w+')
 
 You can then specify ``groupby``:
 
 .. code:: python
 
-	f.from_pandas(pdf, groupby='groups')  # You can also specify "orderby" in order to sort the array by a particular column:
-	
-	f.register_array('arrayA', ['b', 'c'])
-	f.register_array('arrayB', ['a', 'b'])
+    f.from_pandas(pdf, groupby='groups')  # You can also specify "orderby" in order to sort the array by a particular column:
+    
+    f.register_array('arrayA', ['b', 'c'])
+    f.register_array('arrayB', ['a', 'b'])
 
-	f.close()
+    f.close()
 
 Now, when you get the array, the groups have been automatically created, defined by the value of the groupby column:
 
