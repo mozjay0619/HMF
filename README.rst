@@ -178,7 +178,8 @@ You can now retrieve the memmap object the usual way:
 	#         [4, 5],
 	#         [7, 8]])
 
-
+Parallel writing 
+-----------------
 
 The power of parallel writing shines when you have many arrays to write at once, which would be the case if you have groups of arrays determined by ``groupby`` argument. Let's take another example of dataframe that has groups column:
 
