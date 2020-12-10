@@ -15,7 +15,7 @@ Install
 Getting started
 ---------------
 
-First, import the package:
+First, we need to import the package:
 
 .. code:: python
 
@@ -59,17 +59,24 @@ We can write data array using ``set_array`` method:
 
 You need not create the group ahead of time. If groupA does not exist, the above code will create the groupA as well. Also, most importatly, the above code will create a memory-map to the array, which you can find out more about `here <https://numpy.org/doc/stable/reference/generated/numpy.memmap.html>`_
 
+Again, once you are done writing data, don't forget to invoke ``close``!
+
+.. code:: python
+	
+	f.close() 
+
+Reading groups and arrays
+-------------------------
+
 You can retrieve both the groups as well as arrays using ``get_group`` and ``get_array`` methods. For example, the below code will retrieve the written array data:
 
 .. code:: python
 	
 	memmap_obj = f.get_array('/groupA/array1')  
 
-The returned object is a numpy memmap object that was created earlier. Again, once you are done writing data, don't forget to invoke ``close``!
+The returned object is a numpy memmap object that was created earlier. 
 
-.. code:: python
-	
-	f.close() 
+
 
 Writing node attributes
 -----------------------
@@ -86,7 +93,7 @@ You can then retrieve the attributes using ``get_node_attr`` method:
 
 .. code:: python
 	
-	f.set_node_attr('/groupA', key='someAttribute')
+	f.get_node_attr('/groupA', key='someAttribute')
 
 Thus, HMF allows user to write data that is self describing by enabling user to easily read and write accompanying information associated with each node. 
 
@@ -102,6 +109,11 @@ Lastly, HMF has API to easily extract array memmap from Pandas dataframes. Also,
 
 	data = np.arange(10*3).reshape((10, 3))
 	pdf = pd.DataFrame(data=data, columns=['a', 'b', 'c'])
+
+	# 		a	b	c
+	#	0	0	1	2
+	#	1	3	4	5
+	#	2	6	7	8
 
 	f = HMF.open_file('pandasExample', mode='w+')
 
@@ -124,11 +136,19 @@ Finally calling ``close`` to save the data:
 
 	f.close()
 
+	Progress: |██████████████████████████████████████████████████| 100.0% Completed!
+
 You can now retrieve the memmap object the usual way:
 
 .. code:: python
 
 	f.get_array('/arrayA')
+
+	# memmap([[1, 2],
+    #   	  [4, 5],
+    #    	  [7, 8]])
+
+
 
 The power of parallel writing shines when you have many arrays to write at once, which would be the case if you have groups of arrays determined by ``groupby`` argument. Let's take another example of dataframe that has groups column:
 
@@ -149,7 +169,7 @@ You can then specify ``groupby``:
 
 .. code:: python
 
-	f.from_pandas(pdf, groupby='groups')  # You can also specify "orderby" in order to sort the array by a particular column!
+	f.from_pandas(pdf, groupby='groups')  # You can also specify "orderby" in order to sort the array by a particular column:
 	
 	f.register_array('arrayA', ['b', 'c'])
 	f.register_array('arrayB', ['a', 'b'])
