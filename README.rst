@@ -229,7 +229,6 @@ Now, when you get the array, the groups have been automatically created, defined
     # memmap([[12, 13],
     #         [15, 16]])
 
-
 Getting back dataframe 
 -----------------------
 
@@ -258,6 +257,24 @@ Then you can retrieve the data either as numpy array (or memmap) or dataframe: (
 
     # memmap([[12, 13],
     #         [15, 16]])
+
+Convenient methods
+---------------------
+
+HMF object, namely ``f`` in our examples, is meant to be used as a single file handler that can be used alone to write and query data easily. 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
