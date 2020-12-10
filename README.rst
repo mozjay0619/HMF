@@ -15,15 +15,13 @@ Install
 Getting started
 ---------------
 
-The HMF APIs are largely inspired by those of PyTables, and hence supports two of the important functionalities of HDF5 in that they allow the user to write data that is self-organizing and self-documenting. We will demonstrate these ideas through an example. 
-
-First, we need to import the package:
+First, import the package:
 
 .. code:: python
 
 	import HMF
 
-In order to start working with the HMF, we must invoke ``open_file`` method, which will either create a new directory or read from an existing one, which we determine through ``mode`` argument. Note that even though it is called open "file", the word file is loosely used to mean "directory". As such, we must provide the method with the desired path to the root directory, via ``root_path`` argument, where all data will be written:
+In order to start working with the HMF, we must invoke ``open_file`` method, which will either create a new directory or read from an existing one. We determine this using ``mode`` argument. We must provide the method with the desired path to the root directory, via ``root_path`` argument, where all data will be written:
 
 .. code:: python
 
@@ -40,19 +38,19 @@ Once you are done writing data (reading and writing process is described below),
 Writing groups and arrays
 -------------------------
 
-Here we will demonstrate the self-organizing property of HMF. With a single "file" handler, the user can easily write data using hierarchical file system. This will be easier to understand if you are already familiar with HDF5. 
+With a single "file" handler, the user can easily write and read data using hierarchical file system path. An example will make this clear:
 
 .. code:: python
 
 	f.set_group('/groupA')  # the path must start with root "/"
 
-This code will create a "directory", or "node", groupA, in which we can write arrays or further groups. The user can create nested directory at once as well:
+This code will create a "node", groupA, in which we can write arrays or further groups. The user can create nested directory at once as well:
 
 .. code:: python
 
 	f.set_group('/group1/groupA/groupZ')  
 
-We can write array using ``set_array`` method:
+We can write data array using ``set_array`` method:
 
 .. code:: python
 	
