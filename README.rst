@@ -54,9 +54,9 @@ We can write data array using ``set_array`` method:
 
 .. code:: python
 	
-	array = np.arange(9).reshape(3, 3)
+    array = np.arange(9).reshape(3, 3)
 
-	# array([[0, 1, 2],
+    # array([[0, 1, 2],
     #        [3, 4, 5],
     #        [6, 7, 8]])
 
