@@ -242,6 +242,8 @@ What if you want to get the dataframe back instead of numpy array or memmap? You
 
     f.close()
 
+But just as with array, *make sure* that the data type of specified column names is numeric (not even boolean is allowed, convert boolean to 0/1)
+
 Then you can retrieve the data either as numpy array (or memmap) or dataframe: (in both cases, the ``idx`` parameter works the same way)
 
 .. code:: python
