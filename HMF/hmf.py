@@ -165,8 +165,10 @@ class HMF(BaseHMF):
         self.show_progress = show_progress
 
         self.dataframe_colnames = dict()
+
+        self.grouped = False
     
-    def from_pandas(self, pdf, groupby=None, orderby=None):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True):
         """
         need to numerify groupby col!"""
         
@@ -182,6 +184,8 @@ class HMF(BaseHMF):
             tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
+
+            self.grouped = True
             
         elif orderby:
             self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
@@ -199,6 +203,8 @@ class HMF(BaseHMF):
             tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
+
+            self.grouped = True
             
         else:
             group_array = np.zeros(len(pdf))
@@ -211,6 +217,10 @@ class HMF(BaseHMF):
         self.group_names = group_names
         self.group_items = list(zip(group_names, group_idx))
 
+
+    def is_grouped(self):
+
+        return self.grouped
 
     def get_group_sizes(self):
 
@@ -251,7 +261,6 @@ class HMF(BaseHMF):
         else:
             data_array = self.pdf[col_names].values
             
-        
         self.arrays.append((array_filename, data_array))
 
     def register_node_attr(self, attr_dirpath, key, value):
@@ -260,8 +269,10 @@ class HMF(BaseHMF):
 
     def register_dataframe(self, dataframe_filename, col_names):
 
-        self.register_array(dataframe_filename, col_names)
+        if not isinstance(col_names, list):
+            col_names = [col_names]
 
+        self.register_array(dataframe_filename, col_names)
         self.dataframe_colnames[dataframe_filename] = col_names
 
     def get_dataframe(self, dataframe_filepath, idx=None):
@@ -271,7 +282,6 @@ class HMF(BaseHMF):
         col_names = self.dataframe_colnames[dataframe_filename]
         dataframe = pd.DataFrame(array, columns=col_names)
         return dataframe
-
 
     def _write_registered_node_attrs(self):
         """
