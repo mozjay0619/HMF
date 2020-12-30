@@ -265,6 +265,8 @@ The HMF object, namely ``f`` in our examples, is meant to be used as a single fi
 
 .. code:: python
 
+    f.has_groups()  # returns boolean flag for presence of groups (True if groupby is not None)
+
     f.get_group_names()  # returns names of the groups 
 
     f.get_group_sizes()  # returns the sizes of the groups (i.e. number of rows in each group)
