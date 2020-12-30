@@ -165,6 +165,8 @@ class HMF(BaseHMF):
         self.show_progress = show_progress
 
         self.dataframe_colnames = dict()
+
+        self.grouped = False
     
     def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True):
         """
@@ -176,15 +178,17 @@ class HMF(BaseHMF):
             self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
             self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby, orderby], ascending=ascending).reset_index(drop=True)
+            self.pdf = self.pdf.sort_values(by=[groupby, orderby]).reset_index(drop=True)
             group_array = self.pdf[GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
+
+            self.grouped = True
             
         elif orderby:
-            self.pdf = self.pdf.sort_values(by=[orderby], ascending=ascending).reset_index(drop=True)
+            self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
 
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
@@ -199,6 +203,8 @@ class HMF(BaseHMF):
             tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
+
+            self.grouped = True
             
         else:
             group_array = np.zeros(len(pdf))
@@ -211,6 +217,10 @@ class HMF(BaseHMF):
         self.group_names = group_names
         self.group_items = list(zip(group_names, group_idx))
 
+
+    def is_grouped(self):
+
+        return self.grouped
 
     def get_group_sizes(self):
 
