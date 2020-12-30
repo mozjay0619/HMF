@@ -218,7 +218,7 @@ class HMF(BaseHMF):
         self.group_items = list(zip(group_names, group_idx))
 
 
-    def is_grouped(self):
+    def has_groups(self):
 
         return self.grouped
 
