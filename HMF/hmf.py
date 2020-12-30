@@ -166,7 +166,7 @@ class HMF(BaseHMF):
 
         self.dataframe_colnames = dict()
     
-    def from_pandas(self, pdf, groupby=None, orderby=None):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True):
         """
         need to numerify groupby col!"""
         
@@ -176,7 +176,7 @@ class HMF(BaseHMF):
             self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
             self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby, orderby]).reset_index(drop=True)
+            self.pdf = self.pdf.sort_values(by=[groupby, orderby], ascending=ascending).reset_index(drop=True)
             group_array = self.pdf[GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
@@ -184,7 +184,7 @@ class HMF(BaseHMF):
             group_names = tmp[groupby].tolist()
             
         elif orderby:
-            self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
+            self.pdf = self.pdf.sort_values(by=[orderby], ascending=ascending).reset_index(drop=True)
 
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
@@ -251,7 +251,6 @@ class HMF(BaseHMF):
         else:
             data_array = self.pdf[col_names].values
             
-        
         self.arrays.append((array_filename, data_array))
 
     def register_node_attr(self, attr_dirpath, key, value):
@@ -260,8 +259,10 @@ class HMF(BaseHMF):
 
     def register_dataframe(self, dataframe_filename, col_names):
 
-        self.register_array(dataframe_filename, col_names)
+        if not isinstance(col_names, list):
+            col_names = [col_names]
 
+        self.register_array(dataframe_filename, col_names)
         self.dataframe_colnames[dataframe_filename] = col_names
 
     def get_dataframe(self, dataframe_filepath, idx=None):
@@ -271,7 +272,6 @@ class HMF(BaseHMF):
         col_names = self.dataframe_colnames[dataframe_filename]
         dataframe = pd.DataFrame(array, columns=col_names)
         return dataframe
-
 
     def _write_registered_node_attrs(self):
         """
