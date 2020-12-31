@@ -271,12 +271,12 @@ The HMF object, namely ``f`` in our examples, is meant to be used as a single fi
 
     f.get_group_sizes()  # returns the sizes of the groups (i.e. number of rows in each group)
 
-    f.get_group_items()  # returns the tuple of (name, size)
+    f.get_group_items()  # returns the dict of {name: size}
 
     f.get_sorted_group_names()  # returns names of the groups sorted by the group size
 
     f.get_sorted_group_sizes()  # returns sizes of the groups sorted by the group size
 
-    f.get_sorted_group_items()  # returns the tuple of (name, size) sorted by the group size
+    f.get_sorted_group_items()  # returns a list of tuple of (name, size) sorted by the group size
 
 
