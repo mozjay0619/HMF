@@ -232,7 +232,7 @@ class HMF(BaseHMF):
 
     def get_group_items(self):
 
-        return self.group_items
+        return {k: np.diff(v)[0] for k, v in self.group_items}
 
     def get_sorted_group_items(self):
 
