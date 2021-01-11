@@ -17,6 +17,7 @@ from . import constants
 
 GROUPBY_ENCODER = "__specialHMF__groupByNumericEncoder"
 MEMMAP_MAP_FILENAME = "__specialHMF__memmapMap"
+DATAFRAME_NAME = "__specialHMF__dataFrameNumber"
 NUM_FILE_COPY = 3
 
 
@@ -167,55 +168,93 @@ class HMF(BaseHMF):
         self.dataframe_colnames = dict()
 
         self.grouped = False
+
+        # 0.0.b31 update
+        self.pdfs = dict()
+        self.num_pdfs = 0
+
+        self.grouped = dict()
+        self.group_sizes = dict()
+        self.group_names = dict()
+        self.group_items = dict()
     
-    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, dataframe_name=None):
         """
         need to numerify groupby col!"""
+
+        # 0.0.b31 update
+        if dataframe_name is None:
+            dataframe_name = "{}_{}".format(DATAFRAME_NAME, self.num_pdfs)
+
+        self.pdfs[dataframe_name] = pdf
+        self.current_dataframe_name = dataframe_name
         
-        self.pdf = pdf
+        # self.pdf = pdf
         
         if groupby and orderby:
-            self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
-            self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
+            self.pdfs[dataframe_name][GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
+            self.pdfs[dataframe_name][GROUPBY_ENCODER] = self.pdfs[dataframe_name][GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby, orderby]).reset_index(drop=True)
-            group_array = self.pdf[GROUPBY_ENCODER].values
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby, orderby]).reset_index(drop=True)
+            group_array = self.pdfs[dataframe_name][GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped = True
+            self.grouped[dataframe_name] = True
             
         elif orderby:
-            self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[orderby]).reset_index(drop=True)
 
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
+
+            self.grouped[dataframe_name] = False
             
         elif groupby:
-            self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
-            self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
+            self.pdfs[dataframe_name][GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
+            self.pdfs[dataframe_name][GROUPBY_ENCODER] = self.pdfs[dataframe_name][GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby]).reset_index(drop=True)
-            group_array = self.pdf[GROUPBY_ENCODER].values
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby]).reset_index(drop=True)
+            group_array = self.pdfs[dataframe_name][GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped = True
+            self.grouped[dataframe_name] = True
             
         else:
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
+
+            self.grouped[dataframe_name] = False
             
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
 
-        self.group_sizes = np.diff(border_idx)
-        self.group_names = group_names
-        self.group_items = list(zip(group_names, group_idx))
+        self.group_sizes[dataframe_name] = np.diff(border_idx)
+        self.group_names[dataframe_name] = group_names
+        self.group_items[dataframe_name] = list(zip(group_names, group_idx))
+
+
+    def register_array(self, array_filename, columns, encoder=None, decoder=None):
+        """Update memmap_map dictionary - which assumes all saves will be successful.
+        We need to validity check on arrays
+        Also put arrays into sharedctypes
+        """
+        if(encoder):
+            data_array = encoder(self.pdfs[self.current_dataframe_name][columns])
+        else:
+            data_array = self.pdfs[self.current_dataframe_name][columns].values
+            
+        self.arrays.append((array_filename, data_array))
+
+
+
+
+
 
 
     def has_groups(self):
@@ -250,18 +289,9 @@ class HMF(BaseHMF):
 
 
 
-    def register_array(self, array_filename, columns, encoder=None, decoder=None):
-        """Update memmap_map dictionary - which assumes all saves will be successful.
-        We need to validity check on arrays
-        Also put arrays into sharedctypes
-        """
 
-        if(encoder):
-            data_array = encoder(self.pdf[columns])
-        else:
-            data_array = self.pdf[columns].values
-            
-        self.arrays.append((array_filename, data_array))
+
+    
 
     def register_node_attr(self, attr_dirpath, key, value):
 
@@ -321,8 +351,13 @@ class HMF(BaseHMF):
         #     array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
 
+
+
+
+
+
         
-    def close(self, zip_file=False, num_subprocs='auto'):
+    def close(self, zip_file=False, num_subprocs=None):
         """
         How we process the str_arrays should depend on how many arrays we have VS how many
         subprocs we can open
@@ -332,7 +367,7 @@ class HMF(BaseHMF):
 
         if(len(self.arrays) > 0):
 
-            if(num_subprocs=='auto'):
+            if(num_subprocs is None):
                 num_subprocs = psutil.cpu_count(logical=False) - 1
 
             if(self.verbose):
@@ -352,10 +387,16 @@ class HMF(BaseHMF):
         self.del_arrays()
 
 
+
+
+
+
+
+
     def del_pdf(self):
 
         try: 
-            del self.pdf
+            del self.pdfs
         except Exception as e:
             if not (type(e)==AttributeError):
                 raise Exception('failed to delete pdf')
