@@ -250,16 +250,16 @@ class HMF(BaseHMF):
 
 
 
-    def register_array(self, array_filename, col_names, encoder=None, decoder=None):
+    def register_array(self, array_filename, columns, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
         We need to validity check on arrays
         Also put arrays into sharedctypes
         """
 
         if(encoder):
-            data_array = encoder(self.pdf[col_names])
+            data_array = encoder(self.pdf[columns])
         else:
-            data_array = self.pdf[col_names].values
+            data_array = self.pdf[columns].values
             
         self.arrays.append((array_filename, data_array))
 
@@ -267,20 +267,20 @@ class HMF(BaseHMF):
 
         self.node_attrs.append((attr_dirpath, key, value))
 
-    def register_dataframe(self, dataframe_filename, col_names):
+    def register_dataframe(self, dataframe_filename, columns):
 
-        if not isinstance(col_names, list):
-            col_names = [col_names]
+        if not isinstance(columns, list):
+            columns = [columns]
 
-        self.register_array(dataframe_filename, col_names)
-        self.dataframe_colnames[dataframe_filename] = col_names
+        self.register_array(dataframe_filename, columns)
+        self.dataframe_colnames[dataframe_filename] = columns
 
     def get_dataframe(self, dataframe_filepath, idx=None):
 
         array = self.get_array(dataframe_filepath, idx)
         dataframe_filename = dataframe_filepath.split('/')[-1]
-        col_names = self.dataframe_colnames[dataframe_filename]
-        dataframe = pd.DataFrame(array, columns=col_names)
+        columns = self.dataframe_colnames[dataframe_filename]
+        dataframe = pd.DataFrame(array, columns=columns)
         return dataframe
 
     def _write_registered_node_attrs(self):
