@@ -81,9 +81,25 @@ class WriterProcessManager():
 
         self.hmf_obj = hmf_obj
         
-        self.tasks = list(itertools.product(
-            range(len(hmf_obj.arrays)), 
-            range(len(hmf_obj.group_items))))
+        # update 0.0.b31
+        tasks = list()
+        data_keys = list(hmf_obj.arrays.keys())
+
+        for data_key in data_keys:
+            
+            arrays = hmf_obj.arrays[data_key]
+            group_items = hmf_obj.group_items[data_key]
+            
+            _tasks = list(itertools.product(
+                range(len(arrays)), 
+                range(len(group_items))))
+            _tasks = [(data_key, *_task) for _task in _tasks]
+            
+            tasks += _tasks
+
+
+
+
         self.pending_tasks = []
         self.failed_tasks = []
         self.successful_tasks = []

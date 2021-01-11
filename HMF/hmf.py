@@ -11,6 +11,7 @@ import os
 import shutil
 import psutil
 from multiprocessing import sharedctypes
+from collections import defaultdict
 
 from . import constants
 
@@ -159,7 +160,13 @@ class HMF(BaseHMF):
         super(HMF, self).__init__(root_dirpath, memmap_map, verbose)
         
         self.root_dirpath = root_dirpath
-        self.arrays = list()
+
+
+        # 0.0.b31 update
+        self.arrays = defaultdict(list)
+
+
+        # self.arrays = list()
         self.str_arrays = list()
         self.node_attrs = list()
 
@@ -172,6 +179,7 @@ class HMF(BaseHMF):
         # 0.0.b31 update
         self.pdfs = dict()
         self.num_pdfs = 0
+        self.pdf_names = list()
 
         self.grouped = dict()
         self.group_sizes = dict()
@@ -185,6 +193,11 @@ class HMF(BaseHMF):
         # 0.0.b31 update
         if dataframe_name is None:
             dataframe_name = "{}_{}".format(DATAFRAME_NAME, self.num_pdfs)
+
+        if not dataframe_name in self.pdf_names:
+            self.pdf_names.append(dataframe_name)
+
+            self.num_pdfs += 1
 
         self.pdfs[dataframe_name] = pdf
         self.current_dataframe_name = dataframe_name
@@ -249,7 +262,7 @@ class HMF(BaseHMF):
         else:
             data_array = self.pdfs[self.current_dataframe_name][columns].values
             
-        self.arrays.append((array_filename, data_array))
+        self.arrays[self.current_dataframe_name].append((array_filename, data_array))
 
 
 
