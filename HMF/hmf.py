@@ -178,6 +178,8 @@ class HMF(BaseHMF):
         self.group_items = dict()
 
         self.current_dataframe_name = None
+
+        self.memmap_map['multi_pdfs'] = False
     
     def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, name=None):
         """
@@ -198,8 +200,6 @@ class HMF(BaseHMF):
         self.pdfs[dataframe_name] = pdf
         self.current_dataframe_name = dataframe_name
         
-        # self.pdf = pdf
-        
         if groupby and orderby:
             self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
             self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].cat.codes
@@ -207,7 +207,7 @@ class HMF(BaseHMF):
             self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby, orderby]).reset_index(drop=True)
             group_array = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].values
 
-            tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
+            tmp = pd.DataFrame(self.pdfs[dataframe_name][groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
@@ -216,7 +216,7 @@ class HMF(BaseHMF):
         elif orderby:
             self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[orderby]).reset_index(drop=True)
 
-            group_array = np.zeros(len(pdf))
+            group_array = np.zeros(len(self.pdfs[dataframe_name]))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
 
             self.grouped[dataframe_name] = False
@@ -228,14 +228,14 @@ class HMF(BaseHMF):
             self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby]).reset_index(drop=True)
             group_array = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].values
 
-            tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
+            tmp = pd.DataFrame(self.pdfs[dataframe_name][groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
             self.grouped[dataframe_name] = True
             
         else:
-            group_array = np.zeros(len(pdf))
+            group_array = np.zeros(len(self.pdfs[dataframe_name]))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
 
             self.grouped[dataframe_name] = False
@@ -246,7 +246,6 @@ class HMF(BaseHMF):
         self.group_sizes[dataframe_name] = np.diff(border_idx)
         self.group_names[dataframe_name] = group_names
         self.group_items[dataframe_name] = list(zip(group_names, group_idx))
-
 
     def register_array(self, array_filename, columns, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
