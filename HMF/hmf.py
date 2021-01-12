@@ -261,36 +261,67 @@ class HMF(BaseHMF):
         self.arrays[self.current_dataframe_name].append((array_filename, data_array))
 
 
-
     def has_groups(self):
 
-        return self.grouped
+        if not self.memmap_map['multi_pdfs']:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            return self.grouped[primary_default_key]
+        else:
+            return self.grouped
 
     def get_group_sizes(self):
 
-        return self.group_sizes
+        if not self.memmap_map['multi_pdfs']:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            return self.group_sizes[primary_default_key]
+        else:
+            return self.group_sizes
 
     def get_group_names(self):
 
-        return self.group_names
+        if not self.memmap_map['multi_pdfs']:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            return self.group_names[primary_default_key]
+        else:
+            return self.group_names
 
     def get_group_items(self):
 
-        return {k: np.diff(v)[0] for k, v in self.group_items}
+        if not self.memmap_map['multi_pdfs']:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            return {k: np.diff(v)[0] for k, v in self.group_items[primary_default_key]}
+        else:
+            return {k:{k_: np.diff(v_)[0] for k_, v_ in v} for k, v in self.group_items.items()}
 
     def get_sorted_group_items(self):
 
-        return sorted(zip(self.group_names, self.group_sizes), key=lambda x: x[1], reverse=True)
+        if not self.memmap_map['multi_pdfs']:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            return sorted(zip(self.group_names[primary_default_key], self.group_sizes[primary_default_key]), 
+                key=lambda x: x[1], 
+                reverse=True)
+        else:
+            return {k:sorted(zip(self.group_names[k], self.group_sizes[k]), 
+                key=lambda x: x[1], 
+                reverse=True) for k in self.group_names.keys()}
 
     def get_sorted_group_names(self):
 
         sorted_group_items = self.get_sorted_group_items()
-        return [elem[0] for elem in sorted_group_items]
+
+        if not self.memmap_map['multi_pdfs']:
+            return [elem[0] for elem in sorted_group_items]
+        else:
+            return {k: [elem[0] for elem in sorted_group_items[k]] for k in sorted_group_items.keys()}
 
     def get_sorted_group_sizes(self):
 
         sorted_group_items = self.get_sorted_group_items()
-        return [elem[1] for elem in sorted_group_items]
+        
+        if not self.memmap_map['multi_pdfs']:
+            return [elem[1] for elem in sorted_group_items]
+        else:
+            return {k: [elem[1] for elem in sorted_group_items[k]] for k in sorted_group_items.keys()}
 
 
     def register_node_attr(self, attr_dirpath, key, value):
@@ -343,27 +374,6 @@ class HMF(BaseHMF):
             group_name = self.groups[task[1]][0]
 
             print(group_name, attr_dirpath_standalone, key_standalone, value_standalone)
-
-
-
-        # array_filename = self.hmf_obj.arrays[task[0]][0]
-        # shared_array = self.hmf_obj.arrays[task[0]][1]
-
-        # group_name = self.hmf_obj.groups[task[1]][0]
-        # start_idx, end_idx = self.hmf_obj.groups[task[1]][1]
-
-        
-        # if(len(self.hmf_obj.groups)==1):
-        #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
-        # else:
-        #     array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-        #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
-
-
-
-
-
-
         
     def close(self, zip_file=False, num_subprocs=None):
         """
