@@ -172,7 +172,7 @@ class HMF(BaseHMF):
 
         self.show_progress = show_progress
 
-        self.dataframe_colnames = dict()
+        self.dataframe_colnames = defaultdict(dict)
 
         self.grouped = False
 
@@ -186,11 +186,14 @@ class HMF(BaseHMF):
         self.group_names = dict()
         self.group_items = dict()
     
-    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, dataframe_name=None):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, name=None):
         """
         need to numerify groupby col!"""
 
         # 0.0.b31 update
+
+        dataframe_name = name
+
         if dataframe_name is None:
             dataframe_name = "{}_{}".format(DATAFRAME_NAME, self.num_pdfs)
 
@@ -266,10 +269,6 @@ class HMF(BaseHMF):
 
 
 
-
-
-
-
     def has_groups(self):
 
         return self.grouped
@@ -301,11 +300,6 @@ class HMF(BaseHMF):
         return [elem[1] for elem in sorted_group_items]
 
 
-
-
-
-    
-
     def register_node_attr(self, attr_dirpath, key, value):
 
         self.node_attrs.append((attr_dirpath, key, value))
@@ -316,13 +310,17 @@ class HMF(BaseHMF):
             columns = [columns]
 
         self.register_array(dataframe_filename, columns)
-        self.dataframe_colnames[dataframe_filename] = columns
+        self.dataframe_colnames[self.current_dataframe_name][dataframe_filename] = columns
+
 
     def get_dataframe(self, dataframe_filepath, idx=None):
 
         array = self.get_array(dataframe_filepath, idx)
+
+        dataframe_name = dataframe_filepath.split('/')[1]
+
         dataframe_filename = dataframe_filepath.split('/')[-1]
-        columns = self.dataframe_colnames[dataframe_filename]
+        columns = self.dataframe_colnames[dataframe_name][dataframe_filename]
         dataframe = pd.DataFrame(array, columns=columns)
         return dataframe
 

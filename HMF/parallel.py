@@ -24,23 +24,40 @@ class WriterProcess(Process):
 
         self.shared_write_result_dict = shared_write_result_dict
         self.shared_write_error_dict = shared_write_error_dict
-        
         self.task_key = task
 
-        array_filename = SHARED_HMF_OBJ.arrays[task[0]][0]
-        
+        key, array_idx, group_idx = task
+        array_filename = SHARED_HMF_OBJ.arrays[key][array_idx][0]
+        group_name = SHARED_HMF_OBJ.group_items[key][group_idx][0]
+        start_idx, end_idx = SHARED_HMF_OBJ.group_items[key][group_idx][1]
+        self.array = SHARED_HMF_OBJ.arrays[key][array_idx][1][start_idx:end_idx]
 
-        group_name = SHARED_HMF_OBJ.group_items[task[1]][0]
-        start_idx, end_idx = SHARED_HMF_OBJ.group_items[task[1]][1]
+        # updated 0.0.b31
+        array_filepath = "{}/".format(SHARED_HMF_OBJ.root_dirpath)
 
+        # if there is only one key and its value is constants.DATAFRAME_NAME:
+        # array_filepath should not contain the key
+        keys = list(SHARED_HMF_OBJ.group_items.keys())
+        primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+        if(len(keys)==1 and keys[0]==primary_default_key):
+            pass
+        else:
+            array_filepath += "{}__".format(key)
 
-        self.array = SHARED_HMF_OBJ.arrays[task[0]][1][start_idx:end_idx]
-
-        if(len(SHARED_HMF_OBJ.group_items)==1 and SHARED_HMF_OBJ.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
-            self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
+        # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
+        # array_filepath should not contain the group name
+        if(len(SHARED_HMF_OBJ.group_items[key])==1 and SHARED_HMF_OBJ.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
+            array_filepath += array_filename
+            
         else:
             array_filename = SHARED_HMF_OBJ._assemble_dirpath(group_name, array_filename)
-            self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
+            array_filepath += array_filename
+        
+        self.array_filepath = array_filepath
+
+        # Note:
+        # 1. This is the actual file path
+        # 2. "ROOTPATH/PATH__NAME"
         
     def run(self):
         """
@@ -82,23 +99,19 @@ class WriterProcessManager():
         self.hmf_obj = hmf_obj
         
         # update 0.0.b31
-        tasks = list()
+        self.tasks = list()
         data_keys = list(hmf_obj.arrays.keys())
-
         for data_key in data_keys:
             
             arrays = hmf_obj.arrays[data_key]
             group_items = hmf_obj.group_items[data_key]
             
-            _tasks = list(itertools.product(
+            tasks = list(itertools.product(
                 range(len(arrays)), 
                 range(len(group_items))))
-            _tasks = [(data_key, *_task) for _task in _tasks]
+            tasks = [(data_key, *task) for task in tasks]
             
-            tasks += _tasks
-
-
-
+            self.tasks += tasks
 
         self.pending_tasks = []
         self.failed_tasks = []
@@ -144,7 +157,11 @@ class WriterProcessManager():
 
 
         try: 
+
             self.hmf_obj.get_array(array_filepath)
+
+            1/0
+
             return('success')
 
         except Exception as e:
@@ -169,22 +186,65 @@ class WriterProcessManager():
 
     def update_memmap_map(self, task):
 
-        array_filename = self.hmf_obj.arrays[task[0]][0]
-        shared_array = self.hmf_obj.arrays[task[0]][1]
 
-        group_name = self.hmf_obj.group_items[task[1]][0]
-        start_idx, end_idx = self.hmf_obj.group_items[task[1]][1]
+        key, array_idx, group_idx = task
 
+        array_filename = self.hmf_obj.arrays[key][array_idx][0]
+        shared_whole_array = self.hmf_obj.arrays[key][array_idx][1]
+
+        group_name = self.hmf_obj.group_items[key][group_idx][0]
+        start_idx, end_idx = self.hmf_obj.group_items[key][group_idx][1]
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-        array = np.ctypeslib.as_array(shared_array)[start_idx:end_idx]
+        array = np.ctypeslib.as_array(shared_whole_array)[start_idx:end_idx]
 
-        if(len(self.hmf_obj.group_items)==1 and self.hmf_obj.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
-            array_filepath = '/'.join(('', array_filename))
+
+
+
+
+
+        # updated 0.0.b31
+        array_filepath = ''
+
+        # if there is only one key and its value is constants.DATAFRAME_NAME:
+        # array_filepath should not contain the key
+        keys = list(self.hmf_obj.group_items.keys())
+        primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+        if(len(keys)==1 and keys[0]==primary_default_key):
+            pass
         else:
-            array_filepath = '/'.join(('', group_name, array_filename))
+            array_filepath = '/'.join((array_filepath, key))
+
+        # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
+        # array_filepath should not contain the group name
+        if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
+            array_filepath = '/'.join((array_filepath, array_filename))
+        else:
+            # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
+            array_filepath = '/'.join((array_filepath, group_name, array_filename))
+
+        # Note:
+        # 1. This is the fake file path
+        # 2. But it is constructed to mirror the actual filesystem tree structure with / separator
+        # 3. "/PATH/NAME"
+
+
+
+        # if(len(SHARED_HMF_OBJ.group_items[key])==1 and SHARED_HMF_OBJ.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
+        #     self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
+        # else:
+        #     array_filename = SHARED_HMF_OBJ._assemble_dirpath(key, group_name, array_filename)
+        #     self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
+
+
+
+        # if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
+        #     array_filepath = '/'.join(('', key, array_filename))
+        # else:
+        #     array_filepath = '/'.join(('', key, group_name, array_filename))
 
         
+
 
         self.hmf_obj.update_memmap_map_array(array_filepath, array)
 
@@ -280,8 +340,17 @@ class WriterProcessManager():
 
                 successful_write_task = self.successful_write_tasks.pop()
 
+
+
+
+
                 # read_result = self.read_task(successful_write_task)
                 read_result = 'success'
+
+
+
+
+
                 self.read_attempt_dict[successful_write_task] += 1
 
                 if read_result == 'success':

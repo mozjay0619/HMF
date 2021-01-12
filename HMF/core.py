@@ -269,9 +269,9 @@ class BaseHMF():
 
         return memmap_map_group_pos['attributes'][key]
 
-    def _assemble_dirpath(self, source_path, dest_path):
+    def _assemble_dirpath(self, *args):
 
-        return '__'.join((source_path, dest_path))
+        return '__'.join(args)
 
     def _is_group_node(self, memmap_map_pos, node_name):
 
