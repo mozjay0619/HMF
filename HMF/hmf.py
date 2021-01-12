@@ -11,13 +11,9 @@ import os
 import shutil
 import psutil
 from multiprocessing import sharedctypes
+from collections import defaultdict
 
 from . import constants
-
-
-GROUPBY_ENCODER = "__specialHMF__groupByNumericEncoder"
-MEMMAP_MAP_FILENAME = "__specialHMF__memmapMap"
-NUM_FILE_COPY = 3
 
 
 def open_file(root_path, mode='w+', verbose=False):
@@ -82,14 +78,14 @@ def is_hmf_directory(root_path):
     #     print('memmap_map not present')
     #     return(False, None)
 
-    if not fail_safe_check_obj(root_path, MEMMAP_MAP_FILENAME):
+    if not fail_safe_check_obj(root_path, constants.MEMMAP_MAP_FILENAME):
 
         print('memmap_map not present')
         return(False, None)
 
 
 
-    memmap_map = fail_safe_load_obj(os.path.join(root_path, MEMMAP_MAP_FILENAME))
+    memmap_map = fail_safe_load_obj(os.path.join(root_path, constants.MEMMAP_MAP_FILENAME))
 
     # array_file_list = get_all_array_dirpaths(memmap_map)
 
@@ -158,64 +154,112 @@ class HMF(BaseHMF):
         super(HMF, self).__init__(root_dirpath, memmap_map, verbose)
         
         self.root_dirpath = root_dirpath
-        self.arrays = list()
+
+
+        # 0.0.b31 update
+        self.arrays = defaultdict(list)
+
+        # self.arrays = list()
         self.str_arrays = list()
         self.node_attrs = list()
 
         self.show_progress = show_progress
-
-        self.dataframe_colnames = dict()
-
+        self.dataframe_colnames = defaultdict(dict)
         self.grouped = False
+
+        # 0.0.b31 update
+        self.pdfs = dict()
+        self.num_pdfs = 0
+        self.pdf_names = list()
+
+        self.grouped = dict()
+        self.group_sizes = dict()
+        self.group_names = dict()
+        self.group_items = dict()
+
+        self.current_dataframe_name = None
     
-    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, name=None):
         """
         need to numerify groupby col!"""
+
+        # 0.0.b31 update
+
+        dataframe_name = name
+
+        if dataframe_name is None:
+            dataframe_name = "{}_{}".format(constants.DATAFRAME_NAME, self.num_pdfs)
+
+        if not dataframe_name in self.pdf_names:
+            self.pdf_names.append(dataframe_name)
+
+            self.num_pdfs += 1
+
+        self.pdfs[dataframe_name] = pdf
+        self.current_dataframe_name = dataframe_name
         
-        self.pdf = pdf
+        # self.pdf = pdf
         
         if groupby and orderby:
-            self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
-            self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
+            self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
+            self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby, orderby]).reset_index(drop=True)
-            group_array = self.pdf[GROUPBY_ENCODER].values
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby, orderby]).reset_index(drop=True)
+            group_array = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(self.pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped = True
+            self.grouped[dataframe_name] = True
             
         elif orderby:
-            self.pdf = self.pdf.sort_values(by=[orderby]).reset_index(drop=True)
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[orderby]).reset_index(drop=True)
 
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
+
+            self.grouped[dataframe_name] = False
             
         elif groupby:
-            self.pdf[GROUPBY_ENCODER] = self.pdf[groupby].astype('category')
-            self.pdf[GROUPBY_ENCODER] = self.pdf[GROUPBY_ENCODER].cat.codes
+            self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
+            self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].cat.codes
 
-            self.pdf = self.pdf.sort_values(by=[groupby]).reset_index(drop=True)
-            group_array = self.pdf[GROUPBY_ENCODER].values
+            self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[groupby]).reset_index(drop=True)
+            group_array = self.pdfs[dataframe_name][constants.GROUPBY_ENCODER].values
 
             tmp = pd.DataFrame(pdf[groupby].unique(), columns=[groupby])
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped = True
+            self.grouped[dataframe_name] = True
             
         else:
             group_array = np.zeros(len(pdf))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
+
+            self.grouped[dataframe_name] = False
             
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
 
-        self.group_sizes = np.diff(border_idx)
-        self.group_names = group_names
-        self.group_items = list(zip(group_names, group_idx))
+        self.group_sizes[dataframe_name] = np.diff(border_idx)
+        self.group_names[dataframe_name] = group_names
+        self.group_items[dataframe_name] = list(zip(group_names, group_idx))
+
+
+    def register_array(self, array_filename, columns, encoder=None, decoder=None):
+        """Update memmap_map dictionary - which assumes all saves will be successful.
+        We need to validity check on arrays
+        Also put arrays into sharedctypes
+        """
+        if(encoder):
+            data_array = encoder(self.pdfs[self.current_dataframe_name][columns])
+        else:
+            data_array = self.pdfs[self.current_dataframe_name][columns].values
+            
+        self.arrays[self.current_dataframe_name].append((array_filename, data_array))
+
 
 
     def has_groups(self):
@@ -249,20 +293,6 @@ class HMF(BaseHMF):
         return [elem[1] for elem in sorted_group_items]
 
 
-
-    def register_array(self, array_filename, columns, encoder=None, decoder=None):
-        """Update memmap_map dictionary - which assumes all saves will be successful.
-        We need to validity check on arrays
-        Also put arrays into sharedctypes
-        """
-
-        if(encoder):
-            data_array = encoder(self.pdf[columns])
-        else:
-            data_array = self.pdf[columns].values
-            
-        self.arrays.append((array_filename, data_array))
-
     def register_node_attr(self, attr_dirpath, key, value):
 
         self.node_attrs.append((attr_dirpath, key, value))
@@ -273,13 +303,21 @@ class HMF(BaseHMF):
             columns = [columns]
 
         self.register_array(dataframe_filename, columns)
-        self.dataframe_colnames[dataframe_filename] = columns
+        self.dataframe_colnames[self.current_dataframe_name][dataframe_filename] = columns
+
 
     def get_dataframe(self, dataframe_filepath, idx=None):
 
         array = self.get_array(dataframe_filepath, idx)
+        
+        if self.memmap_map['multi_pdfs']:
+            dataframe_name = dataframe_filepath.split('/')[1]
+        else:
+            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            dataframe_name = primary_default_key
+
         dataframe_filename = dataframe_filepath.split('/')[-1]
-        columns = self.dataframe_colnames[dataframe_filename]
+        columns = self.dataframe_colnames[dataframe_name][dataframe_filename]
         dataframe = pd.DataFrame(array, columns=columns)
         return dataframe
 
@@ -321,18 +359,32 @@ class HMF(BaseHMF):
         #     array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         #     array_filepath = '/'.join((self.hmf_obj.root_dirpath, array_filename))
 
+
+
+
+
+
         
-    def close(self, zip_file=False, num_subprocs='auto'):
+    def close(self, zip_file=False, num_subprocs=None):
         """
         How we process the str_arrays should depend on how many arrays we have VS how many
         subprocs we can open
         """
 
+        # Record remaining information on memmap_map
+
+        # is multi pdf recorded 
+        primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+        if self.num_pdfs>1 or self.current_dataframe_name!=primary_default_key:
+            self.memmap_map['multi_pdfs'] = True
+        else:
+            self.memmap_map['multi_pdfs'] = False
+
 
 
         if(len(self.arrays) > 0):
 
-            if(num_subprocs=='auto'):
+            if(num_subprocs is None):
                 num_subprocs = psutil.cpu_count(logical=False) - 1
 
             if(self.verbose):
@@ -344,7 +396,7 @@ class HMF(BaseHMF):
 
             self.failed_tasks = WPM.failed_tasks
 
-        memmap_map_dirpath = os.path.join(self.root_dirpath, MEMMAP_MAP_FILENAME)
+        memmap_map_dirpath = os.path.join(self.root_dirpath, constants.MEMMAP_MAP_FILENAME)
 
         fail_safe_save_obj(self.memmap_map, memmap_map_dirpath)
 
@@ -352,10 +404,16 @@ class HMF(BaseHMF):
         self.del_arrays()
 
 
+
+
+
+
+
+
     def del_pdf(self):
 
         try: 
-            del self.pdf
+            del self.pdfs
         except Exception as e:
             if not (type(e)==AttributeError):
                 raise Exception('failed to delete pdf')
@@ -374,7 +432,7 @@ class HMF(BaseHMF):
 # PR 0.0.b16
 def fail_safe_save_obj(obj, dirpath):
 
-    for i in range(NUM_FILE_COPY):
+    for i in range(constants.NUM_FILE_COPY):
 
         try:
 
@@ -388,7 +446,7 @@ def fail_safe_save_obj(obj, dirpath):
 
 def fail_safe_load_obj(dirpath):
 
-    for i in range(NUM_FILE_COPY):
+    for i in range(constants.NUM_FILE_COPY):
 
         try:
 
@@ -406,7 +464,7 @@ def fail_safe_check_obj(root_path, filename):
 
     file_list = os.listdir(root_path)
 
-    for i in range(NUM_FILE_COPY):
+    for i in range(constants.NUM_FILE_COPY):
 
         copy_filename = filename + str(i)
 
