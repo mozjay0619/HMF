@@ -176,6 +176,8 @@ class HMF(BaseHMF):
         self.group_sizes = dict()
         self.group_names = dict()
         self.group_items = dict()
+
+        self.current_dataframe_name = None
     
     def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, name=None):
         """
