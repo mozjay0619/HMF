@@ -139,35 +139,47 @@ class WriterProcessManager():
         self.show_progress = show_progress
         
     def read_task(self, task):
+
+        # updated 0.0.b31
     
-        array_filename = self.hmf_obj.arrays[task[0]][0]
-        shared_array = self.hmf_obj.arrays[task[0]][1]
+        key, array_idx, group_idx = task
 
-        group_name = self.hmf_obj.group_items[task[1]][0]
-        start_idx, end_idx = self.hmf_obj.group_items[task[1]][1]
+        array_filename = self.hmf_obj.arrays[key][array_idx][0]
+        shared_whole_array = self.hmf_obj.arrays[key][array_idx][1]
 
-        # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-        # array_filepath = '/'.join(('', group_name, array_filename))
+        group_name = self.hmf_obj.group_items[key][group_idx][0]
+        start_idx, end_idx = self.hmf_obj.group_items[key][group_idx][1]
 
+        array_filepath = ''
 
-        if(len(self.hmf_obj.group_items)==1 and self.hmf_obj.group_names[0]==constants.HMF_GROUPBY_DUMMY_NAME):
-            array_filepath = '/'.join(('', array_filename))
+        # if there is only one key and its value is constants.DATAFRAME_NAME:
+        # array_filepath should not contain the key
+        keys = list(self.hmf_obj.group_items.keys())
+        primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+        if(len(keys)==1 and keys[0]==primary_default_key):
+            pass
         else:
-            array_filepath = '/'.join(('', group_name, array_filename))
+            array_filepath = '/'.join((array_filepath, key))
 
+        # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
+        # array_filepath should not contain the group name
+        if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
+            array_filepath = '/'.join((array_filepath, array_filename))
+        else:
+            # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
+            array_filepath = '/'.join((array_filepath, group_name, array_filename))
+
+        # Note:
+        # 1. This is the fake file path
+        # 2. But it is constructed to mirror the actual filesystem tree structure with / separator
+        # 3. "/PATH/NAME"
 
         try: 
-
             self.hmf_obj.get_array(array_filepath)
-
-            1/0
-
             return('success')
-
         except Exception as e:
             self.shared_read_error_dict[task] = str(e)
             return('failure')
-
 
     def write_task(self, task):
         """Update memmap_map here.
@@ -178,14 +190,11 @@ class WriterProcessManager():
         subproc = WriterProcess(self.shared_write_result_dict, self.shared_write_error_dict,
             task)
 
-
-
         subproc.daemon = True
         subproc.start()
         return subproc
 
     def update_memmap_map(self, task):
-
 
         key, array_idx, group_idx = task
 
@@ -197,11 +206,6 @@ class WriterProcessManager():
 
         # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
         array = np.ctypeslib.as_array(shared_whole_array)[start_idx:end_idx]
-
-
-
-
-
 
         # updated 0.0.b31
         array_filepath = ''
@@ -228,28 +232,8 @@ class WriterProcessManager():
         # 2. But it is constructed to mirror the actual filesystem tree structure with / separator
         # 3. "/PATH/NAME"
 
-
-
-        # if(len(SHARED_HMF_OBJ.group_items[key])==1 and SHARED_HMF_OBJ.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
-        #     self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
-        # else:
-        #     array_filename = SHARED_HMF_OBJ._assemble_dirpath(key, group_name, array_filename)
-        #     self.array_filepath = '/'.join((SHARED_HMF_OBJ.root_dirpath, array_filename))
-
-
-
-        # if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
-        #     array_filepath = '/'.join(('', key, array_filename))
-        # else:
-        #     array_filepath = '/'.join(('', key, group_name, array_filename))
-
-        
-
-
         self.hmf_obj.update_memmap_map_array(array_filepath, array)
 
-
-    
     def start(self):
 
         if(self.show_progress):
@@ -340,16 +324,7 @@ class WriterProcessManager():
 
                 successful_write_task = self.successful_write_tasks.pop()
 
-
-
-
-
-                # read_result = self.read_task(successful_write_task)
-                read_result = 'success'
-
-
-
-
+                read_result = self.read_task(successful_write_task)
 
                 self.read_attempt_dict[successful_write_task] += 1
 
@@ -448,17 +423,9 @@ class WriterProcessManager():
 
                     if(self.show_progress):
 
-
-
-                        # cur_len = int((len(self.successful_tasks) + len(self.failed_tasks))/self.max_len * 100) 
                         cur_len = int(len(self.successful_tasks) + len(self.failed_tasks)) 
-
-                        # print(cur_len/self.max_len, cur_len, self.max_len)
-
-
                         printProgressBar(cur_len, self.max_len, prefix = 'Progress:', suffix = '', length = 50)
                     
-
             # check status of subprocs after all the above is finished
             # to give subprocs more time to write
             self.subprocs = [elem for elem in self.subprocs if elem.is_alive()]
