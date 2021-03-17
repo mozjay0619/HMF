@@ -150,7 +150,7 @@ def _depth_first_search(m, k, visited_dirpaths, array_dirpaths):
 
 class HMF(BaseHMF):
     
-    def __init__(self, root_dirpath, memmap_map, verbose=True, show_progress=True):
+    def __init__(self, root_dirpath, memmap_map, verbose=True):
         super(HMF, self).__init__(root_dirpath, memmap_map, verbose)
         
         self.root_dirpath = root_dirpath
@@ -163,7 +163,6 @@ class HMF(BaseHMF):
         self.str_arrays = list()
         self.node_attrs = list()
 
-        self.show_progress = show_progress
         self.dataframe_colnames = defaultdict(dict)
         self.grouped = False
 
@@ -374,7 +373,7 @@ class HMF(BaseHMF):
 
             print(group_name, attr_dirpath_standalone, key_standalone, value_standalone)
         
-    def close(self, zip_file=False, num_subprocs=None):
+    def close(self, zip_file=False, num_subprocs=None, show_progress=True):
         """
         How we process the str_arrays should depend on how many arrays we have VS how many
         subprocs we can open
@@ -399,7 +398,7 @@ class HMF(BaseHMF):
             if(self.verbose):
                 print('Saving registered arrays using multiprocessing [ {} ] subprocs\n'.format(num_subprocs))
 
-            WPM = WriterProcessManager(self, num_subprocs=num_subprocs, verbose=self.verbose)
+            WPM = WriterProcessManager(self, num_subprocs=num_subprocs, verbose=self.verbose, show_progress=show_progress)
             WPM.start()
 
 
