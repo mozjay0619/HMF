@@ -394,15 +394,21 @@ class WriterProcessManager():
 
                         self.successful_tasks.append(pending_task)
 
-                    elif(self.write_attempt_dict[pending_task] == MAX_WRITE_ATTEMPT 
-                        and self.read_attempt_dict[pending_task] == MAX_READ_ATTEMPT):
+                    # elif(self.write_attempt_dict[pending_task] == MAX_WRITE_ATTEMPT 
+                    #     and self.read_attempt_dict[pending_task] == MAX_READ_ATTEMPT):
+                    elif self.write_attempt_dict[pending_task] == MAX_WRITE_ATTEMPT:
 
                         if self.verbose:
                             print('    pending --> failed tasks: {}'.format(pending_task))
                             print('    * reached MAX_WRITE_ATTEMPT\n')
 
                         self.failed_tasks.append(pending_task)
-                        self.successful_write_tasks.remove(pending_task)
+
+                        try:
+                            self.successful_write_tasks.remove(pending_task)
+                        except:
+                            # none of the write was successful
+                            pass 
 
                     elif self.read_attempt_dict[pending_task] == MAX_READ_ATTEMPT:
 

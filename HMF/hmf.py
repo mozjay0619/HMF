@@ -15,6 +15,16 @@ from collections import defaultdict
 
 from . import constants
 
+import warnings
+def format_Warning(message, category, filename, lineno, line=''):
+    return str(filename) + ':' + str(lineno) + ': ' + category.__name__ + ': ' +str(message) + '\n'
+
+class WRITE_TASK_FAILED(UserWarning):
+    pass
+
+class READ_TASK_FAILED(UserWarning):
+    pass
+
 
 def open_file(root_path, mode='w+', verbose=False):
     """
@@ -388,8 +398,6 @@ class HMF(BaseHMF):
         else:
             self.memmap_map['multi_pdfs'] = False
 
-
-
         if(len(self.arrays) > 0):
 
             if(num_subprocs is None):
@@ -401,8 +409,14 @@ class HMF(BaseHMF):
             WPM = WriterProcessManager(self, num_subprocs=num_subprocs, verbose=self.verbose, show_progress=show_progress)
             WPM.start()
 
-
             self.failed_tasks = WPM.failed_tasks
+            if len(self.failed_tasks) > 0:
+
+                if len(WPM.failure_reasons):
+                    warnings.warn(str(WPM.failure_reasons), WRITE_TASK_FAILED)
+                    
+                if len(WPM.shared_read_error_dict):
+                    warnings.warn(str(WPM.shared_read_error_dict), READ_TASK_FAILED)
 
         memmap_map_dirpath = os.path.join(self.root_dirpath, constants.MEMMAP_MAP_FILENAME)
 
@@ -410,6 +424,7 @@ class HMF(BaseHMF):
 
         self.del_pdf()
         self.del_arrays()
+
 
 
 
