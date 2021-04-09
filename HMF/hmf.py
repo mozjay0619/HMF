@@ -190,13 +190,13 @@ class HMF(BaseHMF):
 
         self.memmap_map['multi_pdfs'] = False
     
-    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, name=None):
+    def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, group_name=None):
         """
         need to numerify groupby col!"""
 
         # 0.0.b31 update
 
-        dataframe_name = name
+        dataframe_name = group_name
 
         if dataframe_name is None:
             dataframe_name = "{}_{}".format(constants.DATAFRAME_NAME, self.num_pdfs)
