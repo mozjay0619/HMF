@@ -271,6 +271,8 @@ class BaseHMF():
 
     def _assemble_dirpath(self, *args):
 
+        args = [str(elem) for elem in args]
+
         return '__'.join(args)
 
     def _is_group_node(self, memmap_map_pos, node_name):
