@@ -42,7 +42,7 @@ class WriterProcess(Process):
         if(len(keys)==1 and keys[0]==primary_default_key):
             pass
         else:
-            array_filepath += "{}__".format(key)
+            array_filepath += "{}__".format(str(key))
 
         # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
         # array_filepath should not contain the group name
@@ -159,15 +159,15 @@ class WriterProcessManager():
         if(len(keys)==1 and keys[0]==primary_default_key):
             pass
         else:
-            array_filepath = '/'.join((array_filepath, key))
+            array_filepath = '/'.join((array_filepath, str(key)))
 
         # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
         # array_filepath should not contain the group name
         if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
-            array_filepath = '/'.join((array_filepath, array_filename))
+            array_filepath = '/'.join((array_filepath, str(array_filename)))
         else:
             # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-            array_filepath = '/'.join((array_filepath, group_name, array_filename))
+            array_filepath = '/'.join((array_filepath, str(group_name), str(array_filename)))
 
         # Note:
         # 1. This is the fake file path
@@ -217,15 +217,15 @@ class WriterProcessManager():
         if(len(keys)==1 and keys[0]==primary_default_key):
             pass
         else:
-            array_filepath = '/'.join((array_filepath, key))
+            array_filepath = '/'.join((array_filepath, str(key)))
 
         # if the key's group is only one and its value is constants.HMF_GROUPBY_DUMMY_NAME:
         # array_filepath should not contain the group name
         if(len(self.hmf_obj.group_items[key])==1 and self.hmf_obj.group_names[key][0]==constants.HMF_GROUPBY_DUMMY_NAME):
-            array_filepath = '/'.join((array_filepath, array_filename))
+            array_filepath = '/'.join((array_filepath, str(array_filename)))
         else:
             # array_filename = self.hmf_obj._assemble_dirpath(group_name, array_filename)
-            array_filepath = '/'.join((array_filepath, group_name, array_filename))
+            array_filepath = '/'.join((array_filepath, str(group_name), str(array_filename)))
 
         # Note:
         # 1. This is the fake file path
