@@ -360,6 +360,36 @@ class HMF(BaseHMF):
         dataframe = pd.DataFrame(array, columns=columns)
         return dataframe
 
+
+    def set_dataframe(self, dataframe_filepath, pdf, columns):
+
+        # print(self.dataframe_colnames)
+
+        filepath_components = dataframe_filepath.split('/')
+
+        if len(filepath_components) > 2:
+            group_name = filepath_components[1]
+            
+            # if longer, we need to take care of that. Not now.
+        
+        dataframe_filename = filepath_components[-1]
+
+
+        if self.memmap_map['multi_pdfs']:
+
+            if len(filepath_components)==3:
+                self.dataframe_colnames[group_name][dataframe_filename] = columns
+            elif len(filepath_components)==2:
+                self.dataframe_colnames[dataframe_filename] = columns
+
+        else:
+
+            self.dataframe_colnames[dataframe_filename] = columns
+
+        self.set_array(dataframe_filepath, pdf[columns].values)
+        
+
+
     def _write_registered_node_attrs(self):
         """
         The logic used in this method largely mirrors those found in parallel.py.
