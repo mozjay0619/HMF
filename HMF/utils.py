@@ -32,7 +32,7 @@ def stride_util(array, window_size, skip_size, dtype):
 def border_idx_util(array):
     
     border_idx = np.where(np.diff(array) != 0)[0] + 1
-    border_idx = border_idx.astype(np.int)
+    border_idx = border_idx.astype(int)
 
     border_idx = np.insert(border_idx, 0, 0, axis=0)
     border_idx = np.append(border_idx, [len(array)], axis=0)
