@@ -173,22 +173,22 @@ class HMF(BaseHMF):
         self.str_arrays = list()
         self.node_attrs = list()
 
-        self.dataframe_colnames = defaultdict(dict)
-        self.grouped = False
+        self.memmap_map['dataframe_colnames'] = defaultdict(dict)
+        self.memmap_map['grouped'] = False
 
         # 0.0.b31 update
         self.pdfs = dict()
         self.num_pdfs = 0
         self.pdf_names = list()
 
-        self.grouped = dict()
-        self.group_sizes = dict()
-        self.group_names = dict()
-        self.group_items = dict()
+        self.memmap_map['grouped'] = dict()
+        self.memmap_map['group_sizes'] = dict()
+        self.memmap_map['group_names'] = dict()
+        self.memmap_map['group_items'] = dict()
 
         self.current_dataframe_name = None
 
-        self.multi_pdfs = False
+        self.memmap_map['multi_pdfs'] = False
     
     def from_pandas(self, pdf, groupby=None, orderby=None, ascending=True, group_name=None):
         """
@@ -220,7 +220,7 @@ class HMF(BaseHMF):
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped[dataframe_name] = True
+            self.memmap_map['grouped'][dataframe_name] = True
             
         elif orderby:
             self.pdfs[dataframe_name] = self.pdfs[dataframe_name].sort_values(by=[orderby]).reset_index(drop=True)
@@ -228,7 +228,7 @@ class HMF(BaseHMF):
             group_array = np.zeros(len(self.pdfs[dataframe_name]))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
 
-            self.grouped[dataframe_name] = False
+            self.memmap_map['grouped'][dataframe_name] = False
             
         elif groupby:
             self.pdfs[dataframe_name][constants.GROUPBY_ENCODER] = self.pdfs[dataframe_name][groupby].astype('category')
@@ -241,20 +241,29 @@ class HMF(BaseHMF):
             tmp = tmp.sort_values(by=groupby).reset_index(drop=True)
             group_names = tmp[groupby].tolist()
 
-            self.grouped[dataframe_name] = True
+            self.memmap_map['grouped'][dataframe_name] = True
             
         else:
             group_array = np.zeros(len(self.pdfs[dataframe_name]))
             group_names = [constants.HMF_GROUPBY_DUMMY_NAME]
 
-            self.grouped[dataframe_name] = False
+            self.memmap_map['grouped'][dataframe_name] = False
             
         border_idx = border_idx_util(group_array)
         group_idx = stride_util(border_idx, 2, 1, np.int32)
 
-        self.group_sizes[dataframe_name] = np.diff(border_idx)
-        self.group_names[dataframe_name] = group_names
-        self.group_items[dataframe_name] = list(zip(group_names, group_idx))
+        self.memmap_map['group_sizes'][dataframe_name] = np.diff(border_idx)
+        self.memmap_map['group_names'][dataframe_name] = group_names
+        self.memmap_map['group_items'][dataframe_name] = list(zip(group_names, group_idx))
+
+        
+        # is multi pdf recorded 
+        primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
+        if self.num_pdfs>1 or self.current_dataframe_name!=primary_default_key:
+            self.memmap_map['multi_pdfs'] = True
+
+        else:
+            self.memmap_map['multi_pdfs'] = False
 
     def register_array(self, array_filename, columns, encoder=None, decoder=None):
         """Update memmap_map dictionary - which assumes all saves will be successful.
@@ -272,7 +281,7 @@ class HMF(BaseHMF):
     def has_groups(self):
 
         if not self.memmap_map['multi_pdfs']:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             return self.memmap_map['grouped'][primary_default_key]
         else:
             return self.memmap_map['grouped']
@@ -280,7 +289,7 @@ class HMF(BaseHMF):
     def get_group_sizes(self):
 
         if not self.memmap_map['multi_pdfs']:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             return self.memmap_map['group_sizes'][primary_default_key]
         else:
             return self.memmap_map['group_sizes']
@@ -288,7 +297,7 @@ class HMF(BaseHMF):
     def get_group_names(self):
 
         if not self.memmap_map['multi_pdfs']:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             return self.memmap_map['group_names'][primary_default_key]
         else:
             return self.memmap_map['group_names']
@@ -296,7 +305,7 @@ class HMF(BaseHMF):
     def get_group_items(self):
 
         if not self.memmap_map['multi_pdfs']:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             return {k: np.diff(v)[0] for k, v in self.memmap_map['group_items'][primary_default_key]}
         else:
             return {k:{k_: np.diff(v_)[0] for k_, v_ in v} for k, v in self.memmap_map['group_items'].items()}
@@ -304,12 +313,12 @@ class HMF(BaseHMF):
     def get_sorted_group_items(self):
 
         if not self.memmap_map['multi_pdfs']:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             return sorted(zip(self.memmap_map['group_names'][primary_default_key], self.memmap_map['group_sizes'][primary_default_key]), 
                 key=lambda x: x[1], 
                 reverse=True)
         else:
-            return {k:sorted(zip(self.memmap_map['group_names'][k], self.group_sizes[k]), 
+            return {k:sorted(zip(self.memmap_map['group_names'][k], self.memmap_map['group_sizes'][k]), 
                 key=lambda x: x[1], 
                 reverse=True) for k in self.memmap_map['group_names'].keys()}
 
@@ -341,7 +350,7 @@ class HMF(BaseHMF):
             columns = [columns]
 
         self.register_array(dataframe_filename, columns)
-        self.dataframe_colnames[self.current_dataframe_name][dataframe_filename] = columns
+        self.memmap_map['dataframe_colnames'][self.current_dataframe_name][dataframe_filename] = columns
 
 
     def get_dataframe(self, dataframe_filepath, idx=None):
@@ -351,7 +360,7 @@ class HMF(BaseHMF):
         if self.memmap_map['multi_pdfs']:
             dataframe_name = dataframe_filepath.split('/')[1]
         else:
-            primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
+            primary_default_key = constants.HMF_GROUPBY_DUMMY_NAME
             dataframe_name = primary_default_key
 
         dataframe_filename = dataframe_filepath.split('/')[-1]
@@ -363,7 +372,7 @@ class HMF(BaseHMF):
 
     def set_dataframe(self, dataframe_filepath, pdf, columns):
 
-        # print(self.dataframe_colnames)
+        # print(self.memmap_map['dataframe_colnames'])
 
         filepath_components = dataframe_filepath.split('/')
 
@@ -375,16 +384,16 @@ class HMF(BaseHMF):
         dataframe_filename = filepath_components[-1]
 
 
-        if self.multi_pdfs:
+        if self.memmap_map['multi_pdfs']:
 
             if len(filepath_components)==3:
-                self.dataframe_colnames[group_name][dataframe_filename] = columns
+                self.memmap_map['dataframe_colnames'][group_name][dataframe_filename] = columns
             elif len(filepath_components)==2:
-                self.dataframe_colnames[dataframe_filename] = columns
+                self.memmap_map['dataframe_colnames'][dataframe_filename] = columns
 
         else:
 
-            self.dataframe_colnames[dataframe_filename] = columns
+            self.memmap_map['dataframe_colnames'][dataframe_filename] = columns
 
         self.set_array(dataframe_filepath, pdf[columns].values)
         
@@ -421,13 +430,10 @@ class HMF(BaseHMF):
 
         # Record remaining information on memmap_map
 
-        # is multi pdf recorded 
-        primary_default_key = "{}_{}".format(constants.DATAFRAME_NAME, 0)
-        if self.num_pdfs>1 or self.current_dataframe_name!=primary_default_key:
-            self.multi_pdfs = True
+        
 
-        else:
-            self.multi_pdfs = False
+        self.group_names = self.memmap_map['group_names']
+        self.group_items = self.memmap_map['group_items']
 
         if(len(self.arrays) > 0):
 
@@ -451,13 +457,13 @@ class HMF(BaseHMF):
 
         memmap_map_dirpath = os.path.join(self.root_dirpath, constants.MEMMAP_MAP_FILENAME)
 
-        self.memmap_map['dataframe_colnames'] = self.dataframe_colnames
-        self.memmap_map['group_sizes'] = self.group_sizes
-        self.memmap_map['grouped'] = self.grouped
-        self.memmap_map['group_names'] = self.group_names
-        self.memmap_map['group_items'] = self.group_items
+        # self.memmap_map['dataframe_colnames'] = self.memmap_map['dataframe_colnames']
+        # self.memmap_map['group_sizes'] = self.memmap_map['group_sizes']
+        # self.memmap_map['grouped'] = self.memmap_map['grouped']
+        # self.memmap_map['group_names'] = self.memmap_map['group_names']
+        # self.memmap_map['group_items'] = self.memmap_map['group_items']
 
-        self.memmap_map['multi_pdfs'] = self.multi_pdfs
+        # self.memmap_map['multi_pdfs'] = self.memmap_map['multi_pdfs']
 
         fail_safe_save_obj(self.memmap_map, memmap_map_dirpath)
 
