@@ -1,4 +1,6 @@
 import pytest
+import multiprocessing
+print(multiprocessing.get_start_method())
 
 import numpy as np
 import pandas as pd
@@ -173,9 +175,9 @@ def test_multi_pdf_writing_using_group_names():
 
 	f.close()
 
-	np.array_equal(f.get_dataframe('/__specialHMF__dataFrameNumber_0/a/dataframeA'), 
+	np.array_equal(f.get_dataframe('/groupA/a/dataframeA'), 
                pdf[pdf['group']=='a'][['b', 'c']].values)
-	np.array_equal(f.get_dataframe('/__specialHMF__dataFrameNumber_0/b/dataframeB'), 
+	np.array_equal(f.get_dataframe('/groupB/b/dataframeB'), 
                pdf[pdf['group']=='b'][['a', 'b']].values)
 
 def test_multi_pdf_writing_and_reading_using_group_names():
@@ -199,8 +201,8 @@ def test_multi_pdf_writing_and_reading_using_group_names():
 
 	f = HMF.open_file('test_file', mode='r+', verbose=False)
 
-	np.array_equal(f.get_dataframe('/__specialHMF__dataFrameNumber_0/a/dataframeA'), 
+	np.array_equal(f.get_dataframe('/groupA/a/dataframeA'), 
                pdf[pdf['group']=='a'][['b', 'c']].values)
-	np.array_equal(f.get_dataframe('/__specialHMF__dataFrameNumber_0/b/dataframeB'), 
+	np.array_equal(f.get_dataframe('/groupB/b/dataframeB'), 
                pdf[pdf['group']=='b'][['a', 'b']].values)
 
