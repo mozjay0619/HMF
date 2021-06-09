@@ -1,6 +1,6 @@
 import pytest
 import multiprocessing
-print(multiprocessing.get_start_method())
+multiprocessing.set_start_method('fork')
 
 import numpy as np
 import pandas as pd
