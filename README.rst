@@ -15,7 +15,7 @@ Install
 Getting started
 ---------------
 
-First, we need to import the package:
+First, we need to import the packages:
 
 .. code:: python
 
